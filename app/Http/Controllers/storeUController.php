@@ -224,6 +224,8 @@ class storeUController extends Controller
         } else {
             return view('user.storeDetail', compact('franchiseRow', 'product', 'deals', 'coupons'));
         }
+
+        
     }
 
     public function checkCookie(Request $req)
@@ -358,10 +360,70 @@ class storeUController extends Controller
         }
     }
 
+    public function getAPIData($slug)
+    {
+        //$store = Store::where('slug', $slug)->first();
+        $today = date("Y-m-d");
+        $franchise = Franchise::where('slug', $slug)->pluck('slug')->first();
+        $franchiseRow = Franchise::where('slug', $slug)->first();
+
+        $company = '';
+        if ($franchise == 'dominos') {
+            $company = 'dominos';
+        } elseif ($franchise == 'pizza-hut') {
+            $company = 'pizzaHut';
+        } elseif ($franchise == 'little-caesars') {
+            $company = 'littleCeasars';
+        } elseif ($franchise == 'papa-johns') {
+            $company = 'papaJohns';
+        } elseif ($franchise == 'papa-murphys') {
+            $company = 'papaMurphys';
+        } elseif ($franchise == 'marcos-pizza') {
+            $company = 'marcosPizza';
+        } elseif ($franchise == 'cicis') {
+            $company = 'cicis';
+        }
+        $coupons = [];
+        $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
+        $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => ""));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        
+        $coupons = json_decode($result, true)['response'];
+
+
+        $deals = [];
+        $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
+        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => ""));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        $deals = json_decode($result, true)['response'];
+        if ($franchise == null) {
+            return redirect()->back();
+        }
+        $product = Product::whereRaw('CAST(end_time AS DATE)>=?', [$today])->whereRaw('CAST(start_time AS DATE)<=?', [$today])->where('companyID', $franchiseRow->id)->get();
+    
+        $data = array(
+            'coupon'=>$coupons,
+            'deals'=>$deals,
+            'product'=>$product
+        );
+
+        return $data;
+    }
+
+
     public function search_preference(Request $request)
     {
         if ($request->ajax()) {
             $data = json_decode($request->data);
+            $apiData=[];
             if (session()->get('latitude') && session()->get('latitude')) {
                 $user_latitude = session()->get('latitude');
                 $user_longitude = session()->get('longitude');
@@ -387,19 +449,28 @@ class storeUController extends Controller
                 }
                 $franchise = array();
                 foreach ($franchiseID as $fran){
-                    $data = Franchise::where('id', $fran)->first();
+                    $data = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $data;
+                    $apiData[] = $this->getAPIData($data->slug);
                 }
                 $totalStore = count($franchise);
+
+            
+               
 
                 $res = array(
                     "success"=>1,
                     "message"=> 'success',
                     "store"=>$franchise,
-                    'totalStore'=>$totalStore
+                    'totalStore'=>$totalStore,
+                    'apiData'=>$apiData
                 );
+               
                 //dd($franchise);
-                return Response()->json($res);
+                $view=view("jquery.stores",compact('franchise','apiData'))->render();
+                
+               
+                return response()->json($view);
             } else {
                 $franchise = Franchise::get();
                 $res = array(
@@ -407,11 +478,15 @@ class storeUController extends Controller
                     "message"=> 'We cannot access your location at the moment.',
                     "store"=>$franchise
                 );
-                return Response()->json($res);
+                $view=view("jquery.stores",compact('franchise','apiData'))->render();
+                
+                return response()->json($view);
             }
         } else {
             $res = array("success" => 0, "message" => "opps!something went wrong");
-            return Response()->json($res);
+            $view=view("jquery.stores",compact('franchise','apiData'))->render();
+            $data['html']=$view;
+            return response()->json($view);
         }
     }
 
