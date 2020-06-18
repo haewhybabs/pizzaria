@@ -79,6 +79,7 @@ Route::group(['middleware' => 'isVerified'], function() {
 	Route::get('/stores/{slug?}','storeUController@storeLogo')->name('home.store');
 	Route::post('/store-load-more','storeUController@storeLoadmore');
 	Route::get('/store/{slug}','storeUController@storeDetails')->name('home.viewStore');
+	Route::post('/sidebar/{slug}','storeUController@sidebarSlug');
 	Route::post('/checkCookie','storeUController@checkCookie')->name('store.checkCookie');
 
 	Route::post('subscribeEmail','storeUController@saveSubscriber')->name('subscribe.save');

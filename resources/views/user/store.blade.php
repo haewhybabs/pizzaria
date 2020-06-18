@@ -88,6 +88,40 @@
   .d-flex div{
     margin-right: 15px;
   }
+
+  .lds-hourglass {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.lds-hourglass:after {
+    content: " ";
+    display: block;
+    border-radius: 50%;
+    width: 0;
+    height: 0;
+    margin: 8px;
+    box-sizing: border-box;
+    border: 32px solid #e3342f;
+    border-color: #e3342f transparent #fff transparent;
+    animation: lds-hourglass 1.2s infinite;
+}
+
+@keyframes lds-hourglass {
+    0% {
+        transform: rotate(0);
+        animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    }
+    50% {
+        transform: rotate(900deg);
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    100% {
+        transform: rotate(1800deg);
+    }
+}
 </style>
 @endsection
 @section('content')
@@ -117,7 +151,7 @@
                             style="color:red"
                             @endif
                             >
-                            <a href="{{ route('home.store')}}/{{ $row->slug }}" title="" itemprop="url">{{ ucfirst($row->name) }}</a>
+                            <a href="#" class="sidebarSlug" data-url="{{ URL::TO('sidebar')}}/{{ $row->slug }}" data-id="{{$row->slug}}" title="" itemprop="url">{{ ucfirst($row->name) }}</a>
                           </li>
                           @endforeach
                         </ul>
@@ -174,10 +208,13 @@
                     <div class="row store-list">
                       
                      
-                        @if(count($store) == 0)
-                            <div class="col-md-12" ><h3 align="center">No stores available in your area</h3></div>
+                        @if(count($store) == 0 and Request::segment(1)!='order-wihtout-login')
+                         
+                          <div class="col-md-12" ><h3 align="center">No stores available in your area</h3></div>
+                          
                         @endif
-                        <div class="lds-hourglass"> Loading...</div>
+
+                        
                         @foreach($store  as $row)
                             <div class="col-md-6 col-sm-6 col-lg-6 store-box">
                                 <div class="featured-restaurant-box with-bg style2 brd-rd12 wow fadeIn" data-wow-delay="0.1s">
@@ -222,6 +259,8 @@
       </div>
     </div>
   </div>
+
+  @if(Request::segment(1)=='order-wihtout-login')
 
   <form class="modal multi-step" id="detailModal" method="post" enctype="multipart/form-data" data-backdrop="static" data-keyboard="false">
     @csrf
@@ -336,9 +375,9 @@
         
         
         <div class="form-group" style="padding:0 2%;">
-          <label>Address</label>
-          <textarea class="form-control" placeholder="address" name="address" id="address"></textarea>
-          <label id="addResult" class="errMsg"></label>
+          <label>Location/Zip</label>
+          <input class="form-control" name="location" id="location" placeholder="e.g toronto" required/>
+          <label id="locResult" class="errMsg"></label>
         </div>
         
 
@@ -348,6 +387,7 @@
       </div>
     </div>
   </form>
+  @endif
 
 <!--   <div style="display: none;"  class="modal-dialog" id="prefModal">
   <div class="modal-content">
@@ -469,18 +509,6 @@
       }
     });
 
-/*
-    $('.buffet').click(function() {
-      if($(this).prop('checked'))
-      {
-        $('.buffet').not(this).prop('checked', false);
-      }
-      else {
-        $(this).prop('checked', true)
-      }
-    });
-*/
-
     $('.msg').fadeIn().delay(5000).fadeOut();
     var slug = "<?php if($slug!="")echo $slug; else echo "notdefine"; ?>";
     $(document).on('click','.load-more',function(){
@@ -556,6 +584,8 @@
     });
     $('#searchForm').submit(function(e){
       e.preventDefault();
+      var loading = '<div class="lds-hourglass" style="text-align: center"> Loading...</div>';
+      $(".store-list").html(loading);
     }).validate({
       errorElement : 'span',
       errorClass:"errMsg",
@@ -567,8 +597,28 @@
       },
       submitHandler:function(form){
 
+       
+
         var formdata = new FormData(form);
+        var getForm = $('#searchForm').serializeArray()
+    
+        var existing = localStorage.getItem('detail');
+        var temp = getForm.filter(x => x.name == "filter")
+        var location = '';
+        $.each(temp, (key, value) => {
+          location = value.value
+        })
+
+        existing = existing ? JSON.parse(existing) : {};
+
+        existing['location'] = location;
+        localStorage.setItem('detail', JSON.stringify(existing));
+
+
+    
+
         formdata.append('localStorage', localStorage.getItem('detail'))
+
         $.ajax({
           url:"{{ route('store.search') }}",
           type:"post",
@@ -579,66 +629,7 @@
           contentType:false,
           success:function(data)
           {
-            if(data.store.length <=0)
-            {
-              var _nostore = '<div class="col-md-12" ><h3 align="center">No stores found</h3></div>';
-              $('.store-list').html(_nostore);
-
-            }
-            else
-            {
-              var _html = '';
-              var img = "{{ asset('pizzaImage') }}/";
-              var cimg = "{{ asset('adminAssets/franchiseLogo') }}/";
-              $.each(data.store,function(index,value){
-                _html += '<div class="col-md-6 col-sm-6 col-lg-6 store-box">';
-                _html += '<div class="featured-restaurant-box with-bg style2 brd-rd12 wow fadeIn" data-wow-delay="0.1s">';
-                _html += '<div class="featured-restaurant-thumb">';
-                _html += '<a href="" title="" itemprop="url"><img src="'+cimg+value.company.logo+'" alt="company logo" itemprop="image"></a>';
-                _html += '</div>';
-                _html += '<div class="featured-restaurant-info">';
-                _html += '<span class="red-clr">'+value.address+'</span>';
-                _html += ' <h4 itemprop="headline"><a href="/store/'+value.slug+'" title="" itemprop="url">'+value.name+'</a></h4>';
-                _html += '<div class="row">';
-                $.each(value.products,function(index,value){
-                  _html += '<div class="col-md-4">';
-                  _html += '<div>';
-                  _html += '<img src="'+img+value.pizzaImage+'" style="height:50px;width: 50px"></div>';
-                  _html += '<div class="food-types" style="font-size:9px">'+value.name+'</div>';
-                  _html += '</div>';
-                });
-                _html += '</div>';
-                _html += '<a class="brd-rd30" href="/store/'+value.slug+'" title="Order Online"><i class="fa fa-angle-double-right"></i> Order Online</a>';
-                _html += '</div> </div> </div>';
-              });
-              $(".store-list").html(_html);
-              var _totalres = $('.store-box').length;
-              var total = parseInt(data.totalStore);
-              if(!$(".load-more").length)
-              {
-                var _btn='';
-                _btn += '<div class="row btnloadrow">';
-                _btn += '<div class="col-md-12" align="center">';
-                _btn += ' <button class="load-more  red-bg btn-lg" data-totalRes="'+total+'">';
-                _btn += 'Load more';
-                _btn += '</button>';
-                _btn += '</div></div>';
-                $('.btnload').html(_btn);
-              }
-              else
-              {
-                $(".load-more").attr('data-totalRes',total);
-              }
-              if(total  <= _totalres)
-              {
-                $(".load-more").remove();
-              }
-              else
-              {
-                $(".load-more").html('Load more');
-              }
-            }
-
+            $(".store-list").html(data);
 
           },
           error: function (data) {
@@ -650,121 +641,35 @@
     })
 
 
+    
+    $('.sidebarSlug').click(function(e) {
+      e.preventDefault();
+                
+      var url = $(this).data('url');
+      var slug = $(this).data('id');
 
-// search-filter
-// $('#searchfilter').submit(function(e){
-// 	e.preventDefault();
-// }).validate({
-// 	 errorElement : 'span',
-// 	 errorClass:"errMsg",
-// 	rules:{
-
-// 		pizzaStore:{
-// 			required : true,
-// 		},
-// 		// pizzaPref:"required",
-// 		// pizzaSize:"required",
-// 		// deliveryMethod:"required",
-// 		// buffet:"required"
-// 	},
-// 	messages:{
-// 		pizzaStore:{
-// 			required:"Please select pizza store.",
-// 		},
-// 		// pizzaPref:"Please select pizza preference.",
-// 		// pizzaSize:"Please select pizza size.",
-// 		// deliveryMethod:"Please select pizza delivery method.",
-// 		// buffet:"Please select pizza buffet."
-// 	},
-// 	submitHandler:function(form){
-
-// 			var formdata = new FormData(form);
-// 		$.ajax({
-// 			url:"{{ url('/search-filter') }}",
-// 			type:"post",
-// 			data:formdata,
-// 			dataType: "json",
-//                cache : false,
-//                processData: false,
-//                contentType:false,
-// 			success:function(data)
-// 			{
-// 				//console.log(data.totalStore);
-// 				if(data.store.length <=0)
-// 				{
-// 					var _nostore = '<div class="col-md-12" ><h3 align="center">No stores found</h3></div>';
-// 					$('.store-list').html(_nostore);
-
-// 				}
-// 				else
-// 				{
-// 					// console.log(data.store);
-// 					var _html = '';
-// 	            	var img = "{{ asset('pizzaImage') }}/";
-// 	                var cimg = "{{ asset('adminAssets/franchiseLogo') }}/";
-// 	                $.each(data.store,function(index,value)
-// 	                {
-// 	                	_html += '<div class="col-md-6 col-sm-6 col-lg-6 store-box">';
-// 						_html += '<div class="featured-restaurant-box with-bg style2 brd-rd12 wow fadeIn" data-wow-delay="0.1s">';
-// 						_html += '<div class="featured-restaurant-thumb">';
-// 						_html += '<a href="" title="" itemprop="url"><img src="'+cimg+value.logo+'" alt="company logo" itemprop="image"></a>';
-// 						_html += '</div>';
-// 						_html += '<div class="featured-restaurant-info">';
-// 						_html += '<span class="red-clr">'+value.address+'</span>';
-// 						_html += ' <h4 itemprop="headline"><a href="store/'+value.slug+'" title="" itemprop="url">'+value.name+'</a></h4>';
-// 						_html += '<div class="row">';
-// 						    // $.each(value.products,function(index,value){
-// 						    	_html += '<div class="col-md-4">';
-// 								_html += '<div>';
-// 								_html += '<img src="'+img+value.pizzaImage+'" style="height:50px;width: 50px"></div>';
-// 								_html += '<div class="food-types" style="font-size:9px">'+value.name+'</div>';
-// 								_html += '</div>';
-// 						    // });
-// 						_html += '</div>';
-// 						_html += '<a class="brd-rd30" href="/store/{{ $row->slug }}" title="Order Online"><i class="fa fa-angle-double-right"></i> Order Online</a>';
-// 						_html += '</div> </div> </div>';
-//                		 });
-
-// 	                $(".store-list").html(_html);
-//                 	var _totalres = $('.store-box').length;
-//                 	var total = parseInt(data.totalStore);
-//                 	if(!$(".load-more").length)
-//                 	{
-//                 		var _btn='';
-//                 		_btn += '<div class="row btnloadrow">';
-// 			            _btn += '<div class="col-md-12" align="center">';
-// 			            _btn += ' <button class="load-more  red-bg btn-lg" data-totalRes="'+total+'">';
-// 			            _btn += 'Load more';
-// 			            _btn += '</button>';
-// 			       	    _btn += '</div></div>';
-//                 		$('.btnload').html(_btn);
-//                 	}
-//                 	else
-//                 	{
-//                 		$(".load-more").attr('data-totalRes',total);
-//                 	}
-//                 	//console.log(_totalres);
-//                 	if(total  <= _totalres)
-// 	                {
-// 	                    $(".load-more").remove();
-// 	                }
-// 	                else
-// 	                {
-// 	                    $(".load-more").html('Load more');
-// 	                }
-// 				}
+      var loading = '<div class="lds-hourglass" style="text-align: center"> Loading...</div>';
+      $(".store-list").html(loading);
+      
+      $.ajax({
+        url:url,
+        type:"post",
+        data:{slug:slug, _token: "{{ csrf_token() }}"},
+        dataType:'json',
+        success:function(data)
+        {
+          
+          $(".store-list").html(data);
+        },
+        error: function (data) {
+          var error = '<div style="text-align: center"> Error Occured!!!!</div>';
+          $(".store-list").html(error);
+        },
+      })            
+    });
 
 
-// 			},
-// 			 error: function (data) {
-// 			 	//debugger;
-//                 //toastr[data.status](data.message,data.status);
-//                 console.log(data.message,data.status);
-//             },
 
-// 		})
-// 	}
-// })
 
 
 //company search
@@ -807,46 +712,7 @@ $('#companytext').keyup(function(){
 })
 
 
-//company load more
 
-// $(document).on('click','.btncom',function(){
-// 	var totres = $('.company-item').length;
-// 	$.ajax({
-// 		url:"{{ route('store.companyload') }}",
-// 		type:"post",
-// 		data:{
-// 			"_token": "{{ csrf_token() }}",
-// 			skip:totres
-// 		},
-// 		beforeSend:function(){
-//                $('.btncom').html('<i class="fa fa-refresh fa-spin"></i> loading..');
-//            },
-// 		success:function(data)
-// 		{
-// 			var home = "{{ route('home.store')}}";
-// 			var _html = '';
-// 			 $.each(data,function(index,value)
-// 			 {
-// 				_html+='<li class="company-item">';
-// 				_html+='<a href="'+home+'/'+value.slug+'" title="" itemprop="url">';
-// 				_html+=value.name;
-// 				_html+='</a></li>';
-// 			 });
-// 			$('.company-list').append(_html);
-// 			var tablerec = parseInt($(".btncom").attr('data-totalcom'));
-// 			var rec = $('.company-item').length;
-// 			if(rec == tablerec)
-// 			{
-// 				$('.btncom').remove();
-// 			}
-// 			else
-// 			{
-// 				$('.btncom').html('load more');
-// 			}
-
-// 		}
-// 	})
-// })
 });
 </script>
 
@@ -937,6 +803,8 @@ $('#companytext').keyup(function(){
           else {
             $('#storeResult').html("");
           }
+
+
           if(formData.filter(x => x.name == "deliveryMethod").length < 1)
           {
             $('#delResult').html("Please select delivery method ");
@@ -945,6 +813,16 @@ $('#companytext').keyup(function(){
           else {
             $('#delResult').html("");
           }
+
+          if(formData.filter(x => x.name == "location").length < 1)
+          {
+            $('#locResult').html("Please fill your address field ");
+            iflag = false;
+          }
+          else {
+            $('#locResult').html("");
+          }
+
           if(iflag)
           {
             var temp = formData.filter(x => x.name == "pizzaPref[]")
@@ -976,124 +854,77 @@ $('#companytext').keyup(function(){
             $.each(temp, (key, value) => {
               deliveryMethod = value.value
             })
+
+            var temp = formData.filter(x=>x.name == "location")
+            var address = ''
+            $.each(temp, (key, value) => {
+              address = value.value
+            })
+
             var data = {
               'pizzaPref':pizzaPref,
               'pizzaSize':pizzaSize,
               'pizzaStore':pizzaStore,
               'deliveryMethod':deliveryMethod,
-              'topping':topping
+              'topping':topping,
+              'location':address
             };
 
-            getLocation();
-            var detail=JSON.stringify(data);
-            localStorage.setItem('detail', detail);
+            // getLocation();
+            // var detail=JSON.stringify(data);
+            // localStorage.setItem('detail', detail);
             $('#detailModal').modal('toggle');
-            location.reload();
+            if($(location).attr('href').includes('order-wihtout-login'))
+            {
+              $("#detailModal").modal('hide');
+              var info = JSON.stringify(data);
+              var loading = '<div class="lds-hourglass" style="text-align: center"> Loading...</div>';
+              $(".store-list").html(loading);
+              
+              $.ajax({
+                url:"{{ route('store.preference') }}",
+                type:"post",
+                data:{data:info, from: 'wihtoutLogin', _token: "{{ csrf_token() }}"},
+                dataType:'json',
+                success:function(data)
+                {
+                  console.log(data)
+                  $(".store-list").html(data);
+                },
+                error: function (data) {
+                  var error = '<div style="text-align: center"> Error Occured!!!!</div>';
+                  $(".store-list").html(error);
+                },
+              })
+            }
+            
           }
         })
       }
       else
       {
           //alert("its here");
-        if($(location).attr('href').includes('order-wihtout-login'))
-        {
-          $("#detailModal").modal('hide');
-          var info = localStorage.getItem('detail');
+        // if($(location).attr('href').includes('order-wihtout-login'))
+        // {
+        //   $("#detailModal").modal('hide');
+        //   var info = localStorage.getItem('detail');
          
 
-          $.ajax({
-            url:"{{ route('store.preference') }}",
-            type:"post",
-            data:{data:localStorage.getItem('detail'), from: 'wihtoutLogin', _token: "{{ csrf_token() }}"},
-            dataType:'json',
-            success:function(data)
-            {
-              console.log(data)
-              $(".store-list").html(data);
-            
-              // if(data.store.length <=0)
-              // {
-              //   var _nostore = '<div class="col-md-12" ><h3 align="center">No stores found</h3></div>';
-              //   $('.store-list').html(_nostore);
-              // }
-              // else
-              // {
-              //   var _html = '';
-              //   var img = "{{ asset('pizzaImage') }}/";
-              //   var cimg = "{{ asset('adminAssets/franchiseLogo') }}/";
-              //   for(let i=0; i<data.store.length; i++)
-              //   {
-              //     _html += '<div class="col-md-12 col-sm-12 col-lg-12 store-box">';
-              //     _html += '<div class="featured-restaurant-box with-bg style2 brd-rd12 wow fadeIn" data-wow-delay="0.1s">';
-              //     _html += '<div class="featured-restaurant-thumb">';
-              //     _html += '<a href="" title="" itemprop="url"><img src="'+cimg+data.store[i].logo+'" alt="company logo" itemprop="image"></a>';
-              //     _html += '</div>';
-              //     _html += '<div class="featured-restaurant-info">';
-              //     _html += '<span class="red-clr">'+data.store[i].description+'</span>';
-              //     _html += ' <h4 itemprop="headline"><a href="/store/'+data.store[i].slug+'" title="" itemprop="url">'+data.store[i].name.charAt(0).toUpperCase() + data.store[i].name.slice(1)+'</a></h4>';
-              //     _html += '<div class="row">';
-
-              //     _html += '</div>';
-              //     _html += '<a class="brd-rd30" href="/store/'+data.store[i].slug+'" title="Order Online"><i class="fa fa-angle-double-right"></i> Order Online</a>';
-              //     _html += '</div> </div> </div>';
-              //   };
-
-              //   $(".store-list").html(_html);
-              //   var _totalres = $('.store-box').length;
-              //   var total = parseInt(data.totalStore);
-              //   if(!$(".load-more").length)
-              //   {
-              //     var _btn='';
-              //     _btn += '<div class="row btnloadrow">';
-              //     _btn += '<div class="col-md-12" align="center">';
-              //     _btn += ' <button class="load-more  red-bg btn-lg" data-totalRes="'+total+'">';
-              //     _btn += 'Load more';
-              //     _btn += '</button>';
-              //     _btn += '</div></div>';
-              //     $('.btnload').html(_btn);
-              //   }
-              //   else
-              //   {
-              //     $(".load-more").attr('data-totalRes',total);
-              //   }
-              //   if(total  <= _totalres)
-              //   {
-              //     $(".load-more").remove();
-              //   }
-              //   else
-              //   {
-              //     $(".load-more").html('Load more');
-              //   }
-              // }
-            },
-            error: function (data) {
-              console.log(data.message);
-            },
-          })
-
-          $('.copyCoupon').click(function() {
-            var code = $(this).data('code');
-            var url = $(this).data('url');
-
-            var $temp = $("<input>");
-            $("body").append($temp);
-            $temp.val(code).select();
-            document.execCommand("copy");
-            $temp.remove();
-
-            Swal.fire({
-              title: 'Coupon code copied to the clipboard',
-              animation: false,
-              customClass: {
-                popup: 'animated slideInDown faster',
-              },
-            })
-
-            setTimeout(function(){
-              window.open(url, '_blank');
-            }, 2500);
-          });
-        }
+        //   $.ajax({
+        //     url:"{{ route('store.preference') }}",
+        //     type:"post",
+        //     data:{data:localStorage.getItem('detail'), from: 'wihtoutLogin', _token: "{{ csrf_token() }}"},
+        //     dataType:'json',
+        //     success:function(data)
+        //     {
+        //       console.log(data)
+        //       $(".store-list").html(data);
+        //     },
+        //     error: function (data) {
+        //       console.log(data.message);
+        //     },
+        //   })
+        // }
       }
     }
     else

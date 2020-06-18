@@ -1,6 +1,9 @@
 
-<?php for($i=0; $i<count($franchise); $i++):?>
+@if(count($franchise)<1)
 
+<div class="col-md-12" ><h3 align="center">No stores available in your area</h3></div>
+@else
+<?php for($i=0; $i<count($franchise); $i++):?>
     
         
     <div class="row">
@@ -13,7 +16,7 @@
                             <div class="restaurant-detail-wrapper">
                                 <div class="restaurant-detail-info">
                                     <div class="restaurant-detail-thumb">
-                                        <img class="logoImage lazy" data-src="{{ asset('adminAssets/franchiseLogo/'.$franchise[$i]->logo) }}" style="width: 50%" itemprop="image">
+                                        <img class="logoImage lazy" src="{{ asset('adminAssets/franchiseLogo/'.$franchise[$i]->logo) }}" style="width: 50%" itemprop="image">
                                     </div>
                                     <div class="restaurant-detail-title">
                                         <h1 itemprop="headline">{{$franchise[$i]->name}}</h1>
@@ -60,8 +63,11 @@
                                                             </div>
                                                             <div class="col-sm-2 redirect-div">
                                                                 <div class="button-redirect">
-                                                                    <a class="btn btn-primary copyCoupon" href="{{ $apiData[$i]['coupon'][$j]['websiteName'] }}" target="_blank">
-                                                                        Use this deal
+                                                                    <a class="btn btn-primary copyCoupon"  
+                                                                        data-code= "{{ $apiData[$i]['coupon'][$j]['couponCode'] }}" 
+                                                                        data-url="{{ $apiData[$i]['coupon'][$j]['websiteName'] }}"
+                                                                    >
+                                                                        Use this coupon
                                                                     </a>
                                                                 </div>
                                                                 <div class="coupons-code">
@@ -123,5 +129,34 @@
    
     <?php endfor;?>
 
+    <script type="text/javascript">
+        var lt = "";
+        var lg = "";
+        $(document).ready(function(){
+            $('.copyCoupon').click(function() {
+                
+                var code = $(this).data('code');
+                var url = $(this).data('url');
+                
+                var $temp = $("<input>");
+                $("body").append($temp);
+                $temp.val(code).select();
+                document.execCommand("copy");
+                $temp.remove();
 
+                Swal.fire({
+                    title: 'Coupon code copied to the clipboard',
+                    animation: false,
+                    customClass: {
+                        popup: 'animated slideInDown faster',
+                    },
+                });
+
+                setTimeout(function(){
+                    window.open(url, '_blank');
+                }, 2500);
+            });
+        });
+    </script>
+@endif
     

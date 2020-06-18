@@ -40,7 +40,7 @@ class storeUController extends Controller
                 $loc = '';
             }
             return view('user.storeLogo', compact('company', 'loc'));
-        } else {
+        }else {
             $user = Auth::user();
             $filter = ['dominos', 'pizza-hut', 'little-caesars', 'papa-johns', 'california-pizza-kitchen', 'papa-murphys', 'sbarro', 'marcos', 'cicis', 'chuck-e-cheese'];
             //If user is authenticated
@@ -90,12 +90,12 @@ class storeUController extends Controller
                     $lon = Session::get('longitude');
                     $store = Store::select('stores.*',
                         DB::raw("3959 * acos(cos(radians(" . $lat . "))
-              * cos(radians(stores.latitude))
-              * cos(radians(stores.longitude)
-              - radians(" . $lon . "))
-              + sin(radians(" . $lat . "))
-              * sin(radians(stores.latitude)))
-              AS distance"))
+                        * cos(radians(stores.latitude))
+                        * cos(radians(stores.longitude)
+                        - radians(" . $lon . "))
+                        + sin(radians(" . $lat . "))
+                        * sin(radians(stores.latitude)))
+                        AS distance"))
                         ->Having('distance', '<=', $this->max_distance)
                         ->where('companyID', $company->id)
                         ->groupBy('stores.id')->get();
@@ -116,8 +116,9 @@ class storeUController extends Controller
             $totalCom = Franchise::count();
             $company = Franchise::get();
             $cate = PizzaCategory::where('isActive', 1)->get();
+            $toppings=DB::table('toppings')->get();
             //dd($user, $company, $store, $totalStore, $loc, $slug, $totalCom, $cate, $isLogin);
-            return view('user.store', compact('user', 'company', 'store', 'totalStore', 'loc', 'slug', 'totalCom', 'cate', 'isLogin', 'filter'));
+            return view('user.store', compact('user', 'company', 'store', 'totalStore', 'loc', 'slug', 'totalCom', 'cate', 'isLogin', 'filter','toppings'));
         }
     }
 
@@ -176,6 +177,7 @@ class storeUController extends Controller
         $today = date("Y-m-d");
         $franchise = Franchise::where('slug', $slug)->pluck('slug')->first();
         $franchiseRow = Franchise::where('slug', $slug)->first();
+        $topping = DB::table('toppings')->get();
 
         $company = '';
         if ($franchise == 'dominos') {
@@ -220,9 +222,9 @@ class storeUController extends Controller
         // dd($deals, $coupons, $product);
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);
-            return view('user.storeDetail', compact('user', 'franchiseRow', 'product', 'deals', 'coupons'));
-        } else {
-            return view('user.storeDetail', compact('franchiseRow', 'product', 'deals', 'coupons'));
+            return view('user.storeDetail', compact('user', 'franchiseRow', 'product', 'deals', 'coupons','toppings'));
+        } else {      
+            return view('user.storeDetail', compact('franchiseRow', 'product', 'deals', 'coupons','toppings'));
         }
 
         
@@ -269,6 +271,9 @@ class storeUController extends Controller
     {
         if ($req->ajax()) {
             $filter = $req->filter;
+            $stores = [];
+            $franchise=[];
+            $apiData=[];
             if ($req->slug != 'notdefine') {
                 $slug = $req->slug;
                 $company = Franchise::where('slug', $slug)->first();
@@ -284,15 +289,39 @@ class storeUController extends Controller
                 $inc = 0;
                 $localStorage = json_decode($req->localStorage);
                 foreach ($localStorage->pizzaStore as $value) {
-                    $stores = Store::WhereRaw('(lower(address) like lower(?) or zip_code=?)', ["%{$filter}%", "{$filter}"])->where('companyID', $value)->with('products', 'company')->get()->map(function ($store) {
-                        $store->setRelation('products', $store->products->take(3));
-                        return $store;
-                    });
-                    foreach ($stores as $value) {
-                        $store[$inc] = $value;
-                        $inc++;
+
+                    $stores= DB::table('stores')->where('companyID', $value)->where('city','like','%'.$req->filter.'%')
+                    ->orWhere('zip_code','like','%'.$req->filter.'%')->orWhere('state','like','%'.$req->filter.'%')->get();
+                    
+                }
+
+                $franchiseID = array();
+                for($i=0; $i<count($stores); $i++){
+                    if (!in_array($stores[$i]->companyID, $franchiseID)){
+                        $franchiseID[] = $stores[$i]->companyID;
                     }
                 }
+                
+               
+                foreach ($franchiseID as $fran){
+                    $data = DB::table('franchises')->where('id',$fran)->first();
+                    $franchise[] = $data;
+                    $apiData[] = $this->getAPIData($data->slug);
+                }
+                $totalStore = count($franchise);    
+                $res = array(
+                    "success"=>1,
+                    "message"=> 'success',
+                    "store"=>$franchise,
+                    'totalStore'=>$totalStore,
+                    'apiData'=>$apiData
+                );
+               
+                //dd($franchise);
+                $view=view("jquery.stores",compact('franchise','apiData'))->render();
+                
+               
+                return response()->json($view);
             }
             $totalStore = count($store);
             $res = array("success" => 1, "store" => $store, 'totalStore' => $totalStore);
@@ -419,45 +448,87 @@ class storeUController extends Controller
     }
 
 
+    public function sidebarSlug(Request $request)
+    {
+        if ($request->ajax()) {
+            
+            
+            $apiData=[];
+            $franchise=[];
+            $totalStore = 0;
+            $preferences = session()->get('preferences');
+            if($preferences)
+            {
+               
+                $franchise = DB::table('franchises')->where('slug',$request->slug)->get();
+                
+                $apiData[] = $this->getAPIData($request->slug);
+                
+                $totalStore = count($franchise);    
+                
+            }
+
+            $res = array(
+                "success"=>1,
+                "message"=> 'success',
+                "store"=>$franchise,
+                'totalStore'=>$totalStore,
+                'apiData'=>$apiData
+            );
+           
+            //dd($franchise);
+            $view=view("jquery.stores",compact('franchise','apiData'))->render();
+            
+           
+            return response()->json($view);
+
+                   
+            
+        } 
+        else {
+            $res = array("success" => 0, "message" => "opps!something went wrong");
+            $view=view("jquery.stores",compact('franchise','apiData'))->render();
+            $data['html']=$view;
+            return response()->json($view);
+        }
+    }
+
+
     public function search_preference(Request $request)
     {
         if ($request->ajax()) {
             $data = json_decode($request->data);
+            
             $apiData=[];
-            if (session()->get('latitude') && session()->get('latitude')) {
-                $user_latitude = session()->get('latitude');
-                $user_longitude = session()->get('longitude');
+            $franchise=[];
+            $loc=false;
+            if(isset($data->location)){
+                $Preferences = session()->put('preferences',$data);            
+                $loc=$data->location;
+            }
+
+            if($loc){
+                $stores=array();
+
                 foreach ($data->pizzaStore as $value) {
-                    $store = Store::where('companyID', $value)->get();
-                    foreach ($store as $s) {
-                        $distance = $this->calculateDistance(
-                            $user_latitude,
-                            $user_longitude,
-                            $s->longitude,
-                            $s->latitude
-                        );
-                        if ($this->max_distance <= $distance) {
-                            $stores[] = $s;
-                        }
-                    }
+                    $stores= DB::table('stores')->where('companyID', $value)->where('city','like','%'.$data->location.'%')
+                    ->orWhere('zip_code','like','%'.$data->location.'%')->orWhere('state','like','%'.$data->location.'%')->get();                   
                 }
+
                 $franchiseID = array();
-                foreach ($stores as $new_store){
-                    if (!in_array($new_store->companyID, $franchiseID)){
-                        $franchiseID[] = $new_store->companyID;
+                for($i=0; $i<count($stores); $i++){
+                    if (!in_array($stores[$i]->companyID, $franchiseID)){
+                        $franchiseID[] = $stores[$i]->companyID;
                     }
                 }
-                $franchise = array();
+                
+               
                 foreach ($franchiseID as $fran){
                     $data = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $data;
                     $apiData[] = $this->getAPIData($data->slug);
                 }
-                $totalStore = count($franchise);
-
-            
-               
-
+                $totalStore = count($franchise);    
                 $res = array(
                     "success"=>1,
                     "message"=> 'success',
@@ -471,18 +542,23 @@ class storeUController extends Controller
                 
                
                 return response()->json($view);
-            } else {
-                $franchise = Franchise::get();
+                
+            }
+            
+            
+            else {
+               
                 $res = array(
-                    "success"=>0,
+                    "success"=>false,
                     "message"=> 'We cannot access your location at the moment.',
-                    "store"=>$franchise
+                   
                 );
                 $view=view("jquery.stores",compact('franchise','apiData'))->render();
                 
                 return response()->json($view);
             }
-        } else {
+        } 
+        else {
             $res = array("success" => 0, "message" => "opps!something went wrong");
             $view=view("jquery.stores",compact('franchise','apiData'))->render();
             $data['html']=$view;
