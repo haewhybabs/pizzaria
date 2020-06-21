@@ -389,14 +389,29 @@ class storeUController extends Controller
         }
     }
 
-    public function getAPIData($slug)
+    public function getAPIData($slug,$size,$topping)
     {
         //$store = Store::where('slug', $slug)->first();
         $today = date("Y-m-d");
         $franchise = Franchise::where('slug', $slug)->pluck('slug')->first();
         $franchiseRow = Franchise::where('slug', $slug)->first();
-
+        $pizzaSize = '';
+        $topping = (int)$topping;
+        if($size==0){
+            $pizzaSize = 'small';
+        }
+        elseif($size==1){
+            $pizzaSize = "medium";
+            
+        }
+        elseif($size==2){
+            $pizzaSize = "large";
+        }
+        elseif($size==3){
+            $pizzaSize = "extra large";
+        }
         $company = '';
+
         if ($franchise == 'dominos') {
             $company = 'dominos';
         } elseif ($franchise == 'pizza-hut') {
@@ -414,7 +429,13 @@ class storeUController extends Controller
         }
         $coupons = [];
         $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-        $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => ""));
+        if($size==null){
+            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => ""));
+        }
+        else{
+            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
+        }
+        
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -423,10 +444,10 @@ class storeUController extends Controller
         
         $coupons = json_decode($result, true)['response'];
 
-
+        
         $deals = [];
         $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => ""));
+        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => "","topping"=>"otherTopping","size"=>"medium"));
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -462,7 +483,7 @@ class storeUController extends Controller
                
                 $franchise = DB::table('franchises')->where('slug',$request->slug)->get();
                 
-                $apiData[] = $this->getAPIData($request->slug);
+                $apiData[] = $this->getAPIData($request->slug,null,null);
                 
                 $totalStore = count($franchise);    
                 
@@ -499,13 +520,17 @@ class storeUController extends Controller
         if ($request->ajax()) {
             $data = json_decode($request->data);
             
+            
             $apiData=[];
             $franchise=[];
             $loc=false;
+            
             if(isset($data->location)){
+
                 $Preferences = session()->put('preferences',$data);            
                 $loc=$data->location;
             }
+
 
             if($loc){
                 $stores=array();
@@ -524,11 +549,13 @@ class storeUController extends Controller
                 
                
                 foreach ($franchiseID as $fran){
-                    $data = DB::table('franchises')->where('id',$fran)->first();
-                    $franchise[] = $data;
-                    $apiData[] = $this->getAPIData($data->slug);
+                    $storeData = DB::table('franchises')->where('id',$fran)->first();
+                    $franchise[] = $storeData;
+                    $apiData[] = $this->getAPIData($storeData->slug,$data->pizzaSize,$data->topping);
+                    
                 }
-                $totalStore = count($franchise);    
+                $totalStore = count($franchise);   
+                
                 $res = array(
                     "success"=>1,
                     "message"=> 'success',
