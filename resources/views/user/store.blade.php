@@ -278,15 +278,17 @@
 
           <div class="form-group">
             <label for="pizzaStore"><u>Pizza Franchise</u>(Max 3)</label>
-            <div class="">
+            
               <select data-placeholder="Choose your favourite stores" multiple class="form-control chosen-select glyphicon" data-show-icon="true"  name="pizzaStore[]"   id="pizzaStore" >
                 @foreach($company as $row)
                 <option value="{{ $row->id }}" >{{ $row->name }}</option>
                 @endforeach
               </select>
-            </div>
+              {{-- <img src="{{asset('down.PNG')}}" /> --}}
+            
             <label id="storeResult" class="errMsg"></label>
           </div>
+          
           <div class="form-group">
             <label for="pizzaPref"><u>Pizza Preference</u>(multiple)</label>
             <div class="d-flex">
@@ -604,20 +606,20 @@
     
         var existing = localStorage.getItem('detail');
         var temp = getForm.filter(x => x.name == "filter")
-        var location = '';
-        $.each(temp, (key, value) => {
-          location = value.value
-        })
+        // var location = '';
+        // $.each(temp, (key, value) => {
+        //   location = value.value
+        // })
 
-        existing = existing ? JSON.parse(existing) : {};
+        // existing = existing ? JSON.parse(existing) : {};
 
-        existing['location'] = location;
-        localStorage.setItem('detail', JSON.stringify(existing));
+        // existing['location'] = location;
+        // localStorage.setItem('detail', JSON.stringify(existing));
 
 
     
 
-        formdata.append('localStorage', localStorage.getItem('detail'))
+        // formdata.append('localStorage', localStorage.getItem('detail'))
 
         $.ajax({
           url:"{{ route('store.search') }}",

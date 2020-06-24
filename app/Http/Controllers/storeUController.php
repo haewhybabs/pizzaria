@@ -271,6 +271,7 @@ class storeUController extends Controller
     {
         if ($req->ajax()) {
             $filter = $req->filter;
+            
             $stores = [];
             $franchise=[];
             $apiData=[];
@@ -287,7 +288,8 @@ class storeUController extends Controller
                 $store = $store->slice(0, $this->store_on_page);
             } else {
                 $inc = 0;
-                $localStorage = json_decode($req->localStorage);
+                $localStorage =session()->get('preferences');
+                
                 foreach ($localStorage->pizzaStore as $value) {
 
                     $stores= DB::table('stores')->where('companyID', $value)->where('city','like','%'.$req->filter.'%')
@@ -301,12 +303,14 @@ class storeUController extends Controller
                         $franchiseID[] = $stores[$i]->companyID;
                     }
                 }
+
+                
                 
                
                 foreach ($franchiseID as $fran){
                     $data = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $data;
-                    $apiData[] = $this->getAPIData($data->slug);
+                    $apiData[] = $this->getAPIData($data->slug,$localStorage->pizzaSize,$localStorage->topping);
                 }
                 $totalStore = count($franchise);    
                 $res = array(
@@ -428,11 +432,12 @@ class storeUController extends Controller
             $company = 'cicis';
         }
         $coupons = [];
-        $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
         if($size==null){
+            $ch = curl_init("https://pizzafeed.herokuapp.com/admin/fetch");  
             $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => ""));
         }
         else{
+            $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
             $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
         }
         
@@ -441,7 +446,6 @@ class storeUController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $result = curl_exec($ch);
         curl_close($ch);
-        
         $coupons = json_decode($result, true)['response'];
 
         
@@ -483,7 +487,8 @@ class storeUController extends Controller
                
                 $franchise = DB::table('franchises')->where('slug',$request->slug)->get();
                 
-                $apiData[] = $this->getAPIData($request->slug,null,null);
+                
+                $apiData[] = $this->getAPIData($request->slug,$preferences->pizzaSize,$preferences->topping);
                 
                 $totalStore = count($franchise);    
                 
