@@ -27,93 +27,86 @@
                                     </div>
                                     <div class="restaurant-detail-tabs">
                                         <ul class="nav nav-tabs">
-                                            <li class="active"><a href="#tab1-1" data-toggle="tab"><i class="fa fa-cutlery"></i> Pizzas</a></li>
+                                            
                                             <li><a href="#tab{{$i}}-2" data-toggle="tab"><i class="fa fa-percent"></i>Coupons</a></li>
                                             <li><a href="#tab{{$i}}-3" data-toggle="tab"><i class="fa fa-percent"></i>Sales and Offers</a></li>
                                             <li><a href="#tab{{$i}}-5" data-toggle="tab"><i class="fa fa-info"></i> franchise Info</a></li>
                                         </ul>
                                         <div class="tab-content">
-                                            <div class="tab-pane fade in active" id="tab1-1">
-                                            <!-- <form class="search-dish">
-                                                <input type="text" placeholder="Search here">
-                                                <button type="submit"><i class="fa fa-search"></i></button>
-                                            </form> -->
-                                            <div class="dishes-list-wrapper">
-                                                <h4 class="title3" itemprop="headline"><span class="sudo-bottom sudo-bg-red">Pizza</span></h4>
-                                            </div>
-                                        </div>
+                                           
 
                                         {{-- Coupons --}}
 
-                                        <div class="tab-pane fade in" id="tab{{$i}}-2">
-                                            <div class="dishes-list-wrapper">
-                                                <h4 class="title3" itemprop="headline"><span class="sudo-bottom sudo-bg-red">Coupons</span></h4>
-                                                <ul class="dishes-list">
-                                                    {{-- @if($coupons != null) --}}
-                                                    <?php for($j=0; $j<count($apiData[$i]['coupon']); $j++){?>
-                                                    <li class="wow fadeInUp" data-wow-delay="0.1s">
-                                                        <div class="row summary">
-                                                            <div class="col-sm-10 description">
-                                                                <div>
-                                                                    <h3>{{ $apiData[$i]['coupon'][$j]['discount'] }}</h3>
+                                            <div class="tab-pane fade in" id="tab{{$i}}-2">
+                                                <div class="dishes-list-wrapper">
+                                                    <h4 class="title3" itemprop="headline"><span class="sudo-bottom sudo-bg-red">Coupons</span></h4>
+                                                    <ul class="dishes-list">
+                                                        {{-- @if($coupons != null) --}}
+                                                        <?php for($j=0; $j<count($apiData[$i]['coupon']); $j++){?>
+                                                        <li class="wow fadeInUp" data-wow-delay="0.1s">
+                                                            <div class="row summary">
+                                                                <div class="col-sm-10 description">
+                                                                    <div>
+                                                                        <h3>{{ $apiData[$i]['coupon'][$j]['discount'] }}</h3>
+                                                                    </div>
+                                                                    <div>
+                                                                        {{ $apiData[$i]['coupon'][$j]['pizzaSummary'] }}
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    {{ $apiData[$i]['coupon'][$j]['pizzaSummary'] }}
+                                                                <div class="col-sm-2 redirect-div">
+                                                                    <div class="button-redirect">
+                                                                        <a class="btn btn-primary copyCoupon"  
+                                                                            data-code= "{{ $apiData[$i]['coupon'][$j]['couponCode'] }}" 
+                                                                            data-url="{{ $apiData[$i]['coupon'][$j]['websiteName'] }}"
+                                                                        >
+                                                                            Use this coupon
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="coupons-code">
+                                                                        <span>
+                                                                            {{ $apiData[$i]['coupon'][$j]['couponCode'] }}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-sm-2 redirect-div">
-                                                                <div class="button-redirect">
-                                                                    <a class="btn btn-primary copyCoupon"  
-                                                                        data-code= "{{ $apiData[$i]['coupon'][$j]['couponCode'] }}" 
-                                                                        data-url="{{ $apiData[$i]['coupon'][$j]['websiteName'] }}"
-                                                                    >
-                                                                        Use this coupon
-                                                                    </a>
-                                                                </div>
-                                                                <div class="coupons-code">
-                                                                    <span>
-                                                                        {{ $apiData[$i]['coupon'][$j]['couponCode'] }}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <?php }?>
-                                                    {{-- @endif --}}
-                                                </ul>
+                                                        </li>
+                                                        <?php }?>
+                                                        {{-- @endif --}}
+                                                    </ul>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {{-- Sales --}}
+                                            {{-- Sales --}}
 
-                                        <div class="tab-pane fade in" id="tab{{$i}}-3">
-                                            <div class="dishes-list-wrapper">
-                                                <h4 class="title3" itemprop="headline"><span class="sudo-bottom sudo-bg-red">Sales and Offers</span></h4>
-                                                <ul class="dishes-list">
-                                                    {{-- @if($deals != null) --}}
-                                                    <?php for($j=0; $j<count($apiData[$i]['deals']); $j++){?>
-                                                    <li class="wow fadeInUp" data-wow-delay="0.1s">
-                                                        <div class="row summary">
-                                                            <div class="col-sm-10 deal-description">
-                                                                <div>
-                                                                    <h3>{{ $apiData[$i]['deals'][$j]['discount'] }}</h3>
+                                            <div class="tab-pane fade in" id="tab{{$i}}-3">
+                                                <div class="dishes-list-wrapper">
+                                                    <h4 class="title3" itemprop="headline"><span class="sudo-bottom sudo-bg-red">Sales and Offers</span></h4>
+                                                    <ul class="dishes-list">
+                                                        {{-- @if($deals != null) --}}
+                                                        <?php for($j=0; $j<count($apiData[$i]['deals']); $j++){?>
+                                                        <li class="wow fadeInUp" data-wow-delay="0.1s">
+                                                            <div class="row summary">
+                                                                <div class="col-sm-10 deal-description">
+                                                                    <div>
+                                                                        <h3>{{ $apiData[$i]['deals'][$j]['discount'] }}</h3>
+                                                                    </div>
+                                                                    <div>
+                                                                        {{ $apiData[$i]['deals'][$j]['pizzaSummary'] }}
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    {{ $apiData[$i]['deals'][$j]['pizzaSummary'] }}
+                                                                <div class="col-sm-2 deal-redirect">
+                                                                    <div class=" deal-button">
+                                                                        <a class="btn btn-primary" href="{{ $apiData[$i]['deals'][$j]['websiteName'] }}" target="_blank">
+                                                                            Use this deal
+                                                                        </a>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-sm-2 deal-redirect">
-                                                                <div class=" deal-button">
-                                                                    <a class="btn btn-primary" href="{{ $apiData[$i]['deals'][$j]['websiteName'] }}" target="_blank">
-                                                                        Use this deal
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <?php }?>
-                                                    {{-- @endif --}}
-                                                </ul>
+                                                        </li>
+                                                        <?php }?>
+                                                        {{-- @endif --}}
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

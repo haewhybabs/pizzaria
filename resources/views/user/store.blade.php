@@ -1,4 +1,9 @@
 @extends('layouts.user.app')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
+
 @section('css')
 <style type="text/css">
   .pizzaItem{
@@ -107,6 +112,18 @@
     border: 32px solid #e3342f;
     border-color: #e3342f transparent #fff transparent;
     animation: lds-hourglass 1.2s infinite;
+}
+select[multiple] {
+  background:none;
+  width:auto;
+  height:auto;
+  padding:0;
+  margin:0;
+  border-width: 2px;
+  border-style: inset;
+  -moz-appearance: menulist;
+  -webkit-appearance: menulist;
+  appearance: menulist;
 }
 
 @keyframes lds-hourglass {
@@ -279,11 +296,17 @@
           <div class="form-group">
             <label for="pizzaStore"><u>Pizza Franchise</u>(Max 3)</label>
             
-              <select data-placeholder="Choose your favourite stores" multiple class="form-control chosen-select glyphicon" data-show-icon="true"  name="pizzaStore[]"   id="pizzaStore" >
+              <select data-placeholder="Choose your favourite stores" multiple class="selectpicker form-control" name="pizzaStore[]"   id="pizzaStore" >
                 @foreach($company as $row)
                 <option value="{{ $row->id }}" >{{ $row->name }}</option>
                 @endforeach
               </select>
+              
+              {{-- <select class="selectpicker form-control" multiple data-live-search="true" style="height:300px;">
+                <option>Mustard</option>
+                <option>Ketchup</option>
+                <option>Relish</option>
+              </select> --}}
               {{-- <img src="{{asset('down.PNG')}}" /> --}}
             
             <label id="storeResult" class="errMsg"></label>
@@ -294,7 +317,7 @@
             <div class="d-flex">
               @foreach($cate as $row)
               <div class="form-check" id="pizzaPref">
-                <input type="checkbox" class="form-check-input" name="pizzaPref[]"   id="pizzaPref{{ $row->id }}" value="{{ $row->id }}">
+                <input type="checkbox" class="form-check-input" name="pizzaPref"   id="pizzaPref{{ $row->id }}" value="{{ $row->category }}">
                 <label class="form-check-label" for="pizzaPref{{ $row->id }}">{{ $row->category }}</label>
               </div>
               @endforeach
@@ -481,6 +504,9 @@
 
 <script type="text/javascript">
   $(document).ready(function(){
+    $(function () {
+      $('select').selectpicker();
+    });
     $('.pizzaSize').click(function() {
       if($(this).prop('checked'))
       {
@@ -767,7 +793,7 @@ $('#companytext').keyup(function(){
 
           var formData = $('#detailModal').serializeArray()
 
-          if(formData.filter(x => x.name == "pizzaPref[]").length < 1)
+          if(formData.filter(x => x.name == "pizzaPref").length < 1)
           {
             $('#prefResult').html("Please select your pizza preference");
             iflag = false;
@@ -827,10 +853,10 @@ $('#companytext').keyup(function(){
 
           if(iflag)
           {
-            var temp = formData.filter(x => x.name == "pizzaPref[]")
-            var pizzaPref = []
+            var temp = formData.filter(x => x.name == "pizzaPref")
+            var pizzaPref = ''
             $.each(temp, (key, value) => {
-              pizzaPref.push(value.value)
+              pizzaPref=value.value
             })
 
             var temp = formData.filter(x => x.name == "pizzaSize")
@@ -871,6 +897,7 @@ $('#companytext').keyup(function(){
               'topping':topping,
               'location':address
             };
+            console.log(pizzaStore);
 
             // getLocation();
             // var detail=JSON.stringify(data);

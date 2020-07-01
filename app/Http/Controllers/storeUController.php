@@ -289,11 +289,15 @@ class storeUController extends Controller
             } else {
                 $inc = 0;
                 $localStorage =session()->get('preferences');
-                
-                foreach ($localStorage->pizzaStore as $value) {
 
-                    $stores= DB::table('stores')->where('companyID', $value)->where('city','like','%'.$req->filter.'%')
-                    ->orWhere('zip_code','like','%'.$req->filter.'%')->orWhere('state','like','%'.$req->filter.'%')->get();
+                foreach ($localStorage->pizzaStore as $value) {
+                    $search = DB::table('stores')->where('city','like','%'.$req->filter.'%')
+                    ->orWhere('zip_code','like','%'.$req->filter.'%')->orWhere('state','like','%'.$req->filter.'%')->get();     
+                    foreach($search as $s){
+                        if($s->companyID==$value){
+                            $stores[]=$s;
+                        }
+                    }
                     
                 }
 
@@ -310,7 +314,7 @@ class storeUController extends Controller
                 foreach ($franchiseID as $fran){
                     $data = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $data;
-                    $apiData[] = $this->getAPIData($data->slug,$localStorage->pizzaSize,$localStorage->topping);
+                    $apiData[] = $this->getAPIData($data->slug,$localStorage->pizzaSize,$localStorage->topping,$localStorage->pizzaPref);
                 }
                 $totalStore = count($franchise);    
                 $res = array(
@@ -393,7 +397,7 @@ class storeUController extends Controller
         }
     }
 
-    public function getAPIData($slug,$size,$topping)
+    public function getAPIData($slug,$size,$topping,$pref)
     {
         //$store = Store::where('slug', $slug)->first();
         $today = date("Y-m-d");
@@ -438,7 +442,7 @@ class storeUController extends Controller
         }
         else{
             $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
+            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize,"preference"=>$pref));
         }
         
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
@@ -451,7 +455,7 @@ class storeUController extends Controller
         
         $deals = [];
         $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => "","topping"=>"otherTopping","size"=>"medium"));
+        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => "","topping"=>$topping,"size"=>$pizzaSize,"preference"=>$pref));
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -488,7 +492,7 @@ class storeUController extends Controller
                 $franchise = DB::table('franchises')->where('slug',$request->slug)->get();
                 
                 
-                $apiData[] = $this->getAPIData($request->slug,$preferences->pizzaSize,$preferences->topping);
+                $apiData[] = $this->getAPIData($request->slug,$preferences->pizzaSize,$preferences->topping,$preferences->pizzaPref);
                 
                 $totalStore = count($franchise);    
                 
@@ -539,11 +543,20 @@ class storeUController extends Controller
 
             if($loc){
                 $stores=array();
+                
 
                 foreach ($data->pizzaStore as $value) {
-                    $stores= DB::table('stores')->where('companyID', $value)->where('city','like','%'.$data->location.'%')
-                    ->orWhere('zip_code','like','%'.$data->location.'%')->orWhere('state','like','%'.$data->location.'%')->get();                   
+                    $search = DB::table('stores')->where('city','like','%'.$data->location.'%')
+                    ->orWhere('zip_code','like','%'.$data->location.'%')->orWhere('state','like','%'.$data->location.'%')->get();     
+                    foreach($search as $s){
+                        if($s->companyID==$value){
+                            $stores[]=$s;
+                        }
+                    }
+                                  
                 }
+
+                
 
                 $franchiseID = array();
                 for($i=0; $i<count($stores); $i++){
@@ -556,10 +569,11 @@ class storeUController extends Controller
                 foreach ($franchiseID as $fran){
                     $storeData = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $storeData;
-                    $apiData[] = $this->getAPIData($storeData->slug,$data->pizzaSize,$data->topping);
+                    $apiData[] = $this->getAPIData($storeData->slug,$data->pizzaSize,$data->topping,$data->pizzaPref);
                     
                 }
                 $totalStore = count($franchise);   
+               
                 
                 $res = array(
                     "success"=>1,

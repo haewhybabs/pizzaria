@@ -19,24 +19,7 @@
 // 	return view('user.login');
 // });
 
-// Auth::routes();
-
-// Authentication Routes...
-Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('login', 'Auth\LoginController@login');
-Route::post('logout', 'Auth\LoginController@logout')->name('logout');
-
-// Registration Routes...
-Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register');
-Route::post('register', 'Auth\RegisterController@register');
-
-// Password Reset Routes...
-Route::get('password/reset', 'Auth\ForgotPasswordController@showLinkRequestForm');
-Route::post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail');
-Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm');
-Route::post('password/reset', 'Auth\ResetPasswordController@reset');
-
-
+Auth::routes();
 Route::get('/test', function () {
 	return view('test');
 });
@@ -79,7 +62,6 @@ Route::group(['middleware' => 'isVerified'], function() {
 	Route::get('/stores/{slug?}','storeUController@storeLogo')->name('home.store');
 	Route::post('/store-load-more','storeUController@storeLoadmore');
 	Route::get('/store/{slug}','storeUController@storeDetails')->name('home.viewStore');
-	Route::post('/sidebar/{slug}','storeUController@sidebarSlug');
 	Route::post('/checkCookie','storeUController@checkCookie')->name('store.checkCookie');
 
 	Route::post('subscribeEmail','storeUController@saveSubscriber')->name('subscribe.save');
