@@ -225,14 +225,14 @@ select[multiple] {
                     <div class="row store-list">
                       
                      
-                        @if(count($store) == 0 and Request::segment(1)!='order-wihtout-login')
+                        {{-- @if(count($store) == 0 and Request::segment(1)!='order-wihtout-login')
                          
                           <div class="col-md-12" ><h3 align="center">No stores available in your area</h3></div>
                           
-                        @endif
+                        @endif --}}
 
                         
-                        @foreach($store  as $row)
+                        {{-- @foreach($store  as $row)
                             <div class="col-md-6 col-sm-6 col-lg-6 store-box">
                                 <div class="featured-restaurant-box with-bg style2 brd-rd12 wow fadeIn" data-wow-delay="0.1s">
                                     <div class="featured-restaurant-thumb">
@@ -256,13 +256,13 @@ select[multiple] {
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        @endforeach --}}
                     </div>
 
                 </div>
               </div>
             </div>
-            <div class="btnload">
+            {{-- <div class="btnload">
               @if(count($store)<$totalStore)
               <div class="row btnloadrow">
                 <div class="col-md-12" align="center">
@@ -270,7 +270,7 @@ select[multiple] {
                 </div>
               </div>
               @endif
-            </div>
+            </div> --}}
           </div>
         </div>
       </div>
@@ -278,140 +278,103 @@ select[multiple] {
   </div>
 
   @if(Request::segment(1)=='order-wihtout-login')
+    <form class="modal multi-step" id="detailModal" method="post" enctype="multipart/form-data" data-backdrop="static" data-keyboard="false">
+      @csrf
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" >
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title step-1" data-step="1">Your  preference</h4>
+            <h4 class="modal-title step-2" data-step="2">Personal Details</h4>
+          </div>
 
-  <form class="modal multi-step" id="detailModal" method="post" enctype="multipart/form-data" data-backdrop="static" data-keyboard="false">
-    @csrf
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header" >
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title step-1" data-step="1">Your  preference</h4>
-          <h4 class="modal-title step-2" data-step="2">Personal Details</h4>
-        </div>
+          <div class="modal-body step-1" data-step="1">
 
-        <div class="modal-body step-1" data-step="1">
+            <input type="text" name="slug"  id="slug" value="<?php if($slug!="")echo $slug; else echo "notdefine"; ?>" hidden>
 
-          <input type="text" name="slug"  id="slug" value="<?php if($slug!="")echo $slug; else echo "notdefine"; ?>" hidden>
-
-          <div class="form-group">
-            <label for="pizzaStore"><u>Pizza Franchise</u>(Max 3)</label>
-            
-              <select data-placeholder="Choose your favourite stores" multiple class="selectpicker form-control" name="pizzaStore[]"   id="pizzaStore" >
-                @foreach($company as $row)
-                <option value="{{ $row->id }}" >{{ $row->name }}</option>
-                @endforeach
-              </select>
+            <div class="form-group">
+              <label for="pizzaStore"><u>Pizza Franchise</u>(Max 3)</label>
               
-              {{-- <select class="selectpicker form-control" multiple data-live-search="true" style="height:300px;">
-                <option>Mustard</option>
-                <option>Ketchup</option>
-                <option>Relish</option>
-              </select> --}}
-              {{-- <img src="{{asset('down.PNG')}}" /> --}}
+                <select data-placeholder="Choose your favourite stores" multiple class="selectpicker form-control" name="pizzaStore[]"   id="pizzaStore" >
+                  @foreach($company as $row)
+                  <option value="{{ $row->id }}" >{{ $row->name }}</option>
+                  @endforeach
+                </select>
+              <label id="storeResult" class="errMsg"></label>
+            </div>
             
-            <label id="storeResult" class="errMsg"></label>
-          </div>
-          
-          <div class="form-group">
-            <label for="pizzaPref"><u>Pizza Preference</u>(multiple)</label>
-            <div class="d-flex">
-              @foreach($cate as $row)
-              <div class="form-check" id="pizzaPref">
-                <input type="checkbox" class="form-check-input" name="pizzaPref"   id="pizzaPref{{ $row->id }}" value="{{ $row->category }}">
-                <label class="form-check-label" for="pizzaPref{{ $row->id }}">{{ $row->category }}</label>
-              </div>
-              @endforeach
-            </div>
-            <label id="prefResult" class="errMsg"></label>
-          </div>
-          <div class="form-group">
-            <label for="pizzaSize"><u>Pizza Size</u></label>
-            <div class="" id="pizzaSize">
-              <div class="d-flex">
-                <div class="form-check">
-                  <input class="form-check-input pizzaSize" type="checkbox" name="pizzaSize" id="pizzaSize0" value="0" checked>
-                  <label class="form-check-label" for="pizzaSize0">
-                    Small
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input pizzaSize" type="checkbox" name="pizzaSize" id="pizzaSize1" value="1">
-                  <label class="form-check-label" for="pizzaSize1">
-                    Medium
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input pizzaSize" type="checkbox" name="pizzaSize" id="pizzaSize2" value="2">
-                  <label class="form-check-label" for="pizzaSize2">
-                    Large
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input pizzaSize" type="checkbox" name="pizzaSize" id="pizzaSize3" value="3">
-                  <label class="form-check-label" for="pizzaSize3">
-                    Extra large
-                  </label>
-                </div>
-              </div>
-            </div>
-            <label id="sizeResult" class="errMsg"></label>
-          </div>
-          
-          <div class="form-group">
-            <label for="topping"><u>Toppings</u></label>
-            <div class="" id="topping">
-              <div class="d-flex">
-                @foreach($toppings as $topping)
-                  <div class="form-check">
-                  @if($topping->idtoppings==1)
-                    <input class="form-check-input topping" type="checkbox" name="topping" id="topping{{$topping->idtoppings}}" value="{{$topping->toppings}}" checked>
-                  @else
-                    <input class="form-check-input topping" type="checkbox" name="topping" id="topping{{$topping->idtoppings}}" value="{{$topping->toppings}}">
-                  @endif
-                    <label class="form-check-label" for="topping1">
-                      {{$topping->toppings}}
+            <div class="form-group">
+              <label for="pizzaSize"><u>Pizza Size</u></label>
+              <div class="" id="pizzaSize">
+                <div class="d-flex">
+                  @foreach($sizes as $size)
+                    <div class="form-check"> 
+                      <input class="form-check-input pizzaSize" type="checkbox" name="pizzaSize" id="pizzaSize{{$size->idsize}}" value="{{$size->pizzaSize}}">
+                    <label class="form-check-label" for="pizzaSize{{$size->idsize}}">
+                      {{$size->pizzaSize}}
                     </label>
-                  </div>
-                @endforeach
+                    </div>
+                  @endforeach
+                </div>
               </div>
+              <label id="sizeResult" class="errMsg"></label>
             </div>
-            <label id="toppingResult" class="errMsg"></label>
-          </div>
-
-          <div class="form-group">
-            <label for="deliveryMethod"><u>Delivery methods</u></label>
-            <div class="d-flex">
-              <div class="form-check">
-                <input class="form-check-input deliveryMethod pickup" type="checkbox" name="deliveryMethod" id="deliveryMethodpickup" value="pickup">
-                <label class="form-check-label" for="deliveryMethodpickup">
-                  Pickup
-                </label>
+            
+            <div class="form-group">
+              <label for="topping"><u>Toppings</u></label>
+              <div class="" id="topping">
+                <div class="d-flex">
+                  @foreach($toppings as $topping)
+                    <div class="form-check">
+                    @if($topping->idtoppings==1)
+                      <input class="form-check-input topping" type="checkbox" name="topping" id="topping{{$topping->idtoppings}}" value="{{$topping->toppings}}" checked>
+                    @else
+                      <input class="form-check-input topping" type="checkbox" name="topping" id="topping{{$topping->idtoppings}}" value="{{$topping->toppings}}">
+                    @endif
+                      <label class="form-check-label" for="topping1">
+                        {{$topping->toppings}}
+                      </label>
+                    </div>
+                  @endforeach
+                </div>
               </div>
-              <div class="form-check">
-                <input class="form-check-input deliveryMethod delivery" type="checkbox" name="deliveryMethod" id="deliveryMethoddelivery" value="delivery">
-                <label class="form-check-label" for="deliveryMethoddelivery">
-                  Delivery
-                </label>
-              </div>
+              <label id="toppingResult" class="errMsg"></label>
             </div>
-            <label id="delResult" class="errMsg"></label>
-          </div>
-        </div>
-        
-        
-        <div class="form-group" style="padding:0 2%;">
-          <label>Location/Zip</label>
-          <input class="form-control" name="location" id="location" placeholder="e.g toronto" required/>
-          <label id="locResult" class="errMsg"></label>
-        </div>
-        
 
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Finish</button>
+            <div class="form-group">
+              <label for="deliveryMethod"><u>Delivery methods</u></label>
+              <div class="d-flex">
+                <div class="form-check">
+                  <input class="form-check-input deliveryMethod pickup" type="checkbox" name="deliveryMethod" id="deliveryMethodpickup" value="pickup">
+                  <label class="form-check-label" for="deliveryMethodpickup">
+                    Pickup
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input deliveryMethod delivery" type="checkbox" name="deliveryMethod" id="deliveryMethoddelivery" value="delivery">
+                  <label class="form-check-label" for="deliveryMethoddelivery">
+                    Delivery
+                  </label>
+                </div>
+              </div>
+              <label id="delResult" class="errMsg"></label>
+            </div>
+          </div>
+          
+          
+          <div class="form-group" style="padding:0 2%;">
+            <label>Location/Zip</label>
+            <input class="form-control" name="location" id="location" placeholder="e.g toronto" required/>
+            <label id="locResult" class="errMsg"></label>
+          </div>
+          
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Finish</button>
+          </div>
         </div>
       </div>
-    </div>
-  </form>
+    </form>
   @endif
 
 <!--   <div style="display: none;"  class="modal-dialog" id="prefModal">
@@ -489,17 +452,32 @@ select[multiple] {
 @section('js')
 <script type="text/javascript" src="{{ asset('adminAssets/js/jquery.validate.min.js')}}"></script>
 @if(Auth::user())
-@if($loc)
+
 <script type="text/javascript">
-  var latitude = "{{$loc->latitude }}";
-  var longitude = "{{$loc->longitude }}";
 
   $(document).ready(function(){
-//alert(latitude);
-//alert(longitude);
-})
-</script>
-@endif
+    $(function () {
+      var loading = '<div class="lds-hourglass" style="text-align: center"> Loading...</div>';
+      $(".store-list").html(loading);
+      $.ajax({
+        url:"{{ route('store.preference') }}",
+        type:"post",
+        data:{_token: "{{ csrf_token() }}"},
+        dataType:'json',
+        success:function(data)
+        {
+          console.log(data)
+          $(".store-list").html(data);
+        },
+        error: function (data) {
+          var error = '<div style="text-align: center"> Error Occured!!!!</div>';
+          $(".store-list").html(error);
+        },
+      })    
+    });
+  })
+</script> 
+
 @endif
 
 <script type="text/javascript">
@@ -793,16 +771,6 @@ $('#companytext').keyup(function(){
 
           var formData = $('#detailModal').serializeArray()
 
-          if(formData.filter(x => x.name == "pizzaPref").length < 1)
-          {
-            $('#prefResult').html("Please select your pizza preference");
-            iflag = false;
-          }
-          else {
-            $('#prefResult').html("");
-          }
-
-
           if(formData.filter(x => x.name == "pizzaSize").length < 1)
           {
             $('#sizeResult').html("Please select your favourite pizza size");
@@ -853,11 +821,6 @@ $('#companytext').keyup(function(){
 
           if(iflag)
           {
-            var temp = formData.filter(x => x.name == "pizzaPref")
-            var pizzaPref = ''
-            $.each(temp, (key, value) => {
-              pizzaPref=value.value
-            })
 
             var temp = formData.filter(x => x.name == "pizzaSize")
             var pizzaSize = ''
@@ -890,7 +853,7 @@ $('#companytext').keyup(function(){
             })
 
             var data = {
-              'pizzaPref':pizzaPref,
+             
               'pizzaSize':pizzaSize,
               'pizzaStore':pizzaStore,
               'deliveryMethod':deliveryMethod,

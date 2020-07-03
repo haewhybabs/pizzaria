@@ -10,42 +10,94 @@ use \App\Franchise;
 use Image;
 use Response;
 use Hash;
+use DB;
 class profileController extends Controller
 {
+  function __construct()
+    {
+        $this->middleware('auth');
+
+    }
     public function userAccount()
     {
     	$user = User::find(Auth::user()->id);
     	$cate = PizzaCategory::get();
       $com = Franchise::get();
+      $toppings = DB::table('toppings')->get();
+      $userPref = DB::table('preference')->where('user_id',auth()->user()->id)->first();
+      $sizes = DB::table('pizzasize')->get();
+      $stores = DB::table('preference_stores')->join('franchises','franchises.id','=','preference_stores.franchise')
+      ->where('preference_stores.preference_id',$userPref->idpreference)->get();
+      // print_r($userPref);
       // dd($user);
-    	return view('user.userAccount',compact('user','cate','com'));
+    	return view('user.userAccount',compact('user','cate','com','toppings','userPref','sizes','stores'));
     }
     public function update(Request $req)
     {
-      // dd($req->all());
-      $pref =  implode(',',$req->pizzaType);
-      $com =  implode(',',$req->pizzaStore);
-      $user = User::find($req->id);
-      $user->name = $req->name;
-      $user->email = $req->email;
-      $user->address = $user->address;
-      $user->phone = $user->phone;
-      $user->city= $req->city;
-      $user->state = $req->state;
-      $user->country = $req->country;
-      $user->preference =  $pref;
-      $user->fav_com = $com;
-      $user->pizza_size = $req->pizzaSize;
-      $user->delivery_method = $req->deliveryMethod;
-      $user->buffet = $req->buffet;
+      $user = DB::table('users')->where('id',auth()->user()->id)->first();
+      
+
+      $imgname = $user->imgname;
+
       if($req->uimg)
       {
         $file = $req->uimg;
         $imgname = $file->getClientOriginalName();
         $file->move('userAssets/userImage',$file->getClientOriginalName());
-        $user->imgname = $imgname;
       }
-      $user->save();
+    
+      $userData = array(
+        'name'=>$req->name,
+        'email'=>$req->email,
+        'address'=>$req->address,
+        'phone'=>$req->phone,
+        'city'=>$req->city,
+        'state'=>$req->state,
+        'country'=>$req->country,
+        'zip_code'=>$req->zip_code,
+        'imgname'=>$imgname
+      );
+
+      $update = DB::table('users')->where('id',auth()->user()->id)->update($userData);
+
+      $preferenceData = array(
+        "toppings"=>$req->topping,
+        "delivery_method"=>$req->deliveryMethod,
+        "pizzaSize"=>$req->pizzaSize,
+        'user_id'=>auth()->user()->id
+      );
+      $preference = DB::table('preference')->where('user_id',auth()->user()->id)->first();
+      if($preference){
+        DB::table('preference')->where('user_id',auth()->user()->id)->update($preferenceData);
+        DB::table('preference_stores')->where('preference_id',$preference->idpreference)->delete();
+        $idpreference = $preference->idpreference;
+      }
+      else{
+        $idpreference =DB::table('preference')->insertGetId($preferenceData);
+      }
+
+
+
+      for($i=0;$i<count($req->pizzaStore); $i++){
+        $franchiseData = array(
+          'user_id'=>auth()->user()->id,
+          'franchise'=>$req->pizzaStore[$i],
+          'preference_id'=>$idpreference
+        );
+        DB::table('preference_stores')->insert($franchiseData);
+      }
+      
+      
+      // print_r($update);
+        
+      // if($req->uimg)
+      // {
+      //   $file = $req->uimg;
+      //   $imgname = $file->getClientOriginalName();
+      //   $file->move('userAssets/userImage',$file->getClientOriginalName());
+      //   $user->imgname = $imgname;
+      // }
+      // $user->save();
       return redirect()->route('myaccount');
     }
     public function save(Request $req)

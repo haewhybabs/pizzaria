@@ -23,6 +23,7 @@ Auth::routes();
 Route::get('/test', function () {
 	return view('test');
 });
+Route::post('/sidebar/{slug}','storeUController@sidebarSlug');
 
 Route::match(['get', 'post'], '/verifyUser', 'Auth\RegisterController@verifyEmail')->name('user.verify')->middleware('auth');
 Route::get('/resendCode','Auth\RegisterController@resendCode')->name('resendCode');
@@ -74,7 +75,8 @@ Route::group(['middleware' => 'isVerified'], function() {
 	Route::any('/search-filter','storeUController@search_filter')->name('store.filter');
 	Route::any('/search-preference','storeUController@search_preference')->name('store.preference');
 	Route::get('/order-wihtout-login','orderWithoutLoginController@storeLogo');
-	Route::get('/order-now','storeUController@orderNow');
+	// Route::get('/order-now','storeUController@orderNow');
+	Route::get('/order-now','storeUController@userOrderNow');
 });
 
 Route::prefix('admin')->group(function(){

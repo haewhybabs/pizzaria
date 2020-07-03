@@ -29,17 +29,18 @@ class storeUController extends Controller
     public function storeLogo($slug = '', Request $req)
     {
         $loc = '';
+        $sizes = DB::table('pizzasize')->get();
         if ($slug == '') {
             $company = Franchise::get();
             if (Auth::user()) {
                 $user = Auth::user();
                 $id = Auth::user()->id;
                 $loc = userLocation::where('userid', $id)->latest()->first();
-                return view('user.storeLogo', compact('user', 'company', 'loc'));
+                return view('user.storeLogo', compact('user', 'company', 'loc','sizes'));
             } else {
                 $loc = '';
             }
-            return view('user.storeLogo', compact('company', 'loc'));
+            return view('user.storeLogo', compact('company', 'loc','sizes'));
         }else {
             $user = Auth::user();
             $filter = ['dominos', 'pizza-hut', 'little-caesars', 'papa-johns', 'california-pizza-kitchen', 'papa-murphys', 'sbarro', 'marcos', 'cicis', 'chuck-e-cheese'];
@@ -117,8 +118,9 @@ class storeUController extends Controller
             $company = Franchise::get();
             $cate = PizzaCategory::where('isActive', 1)->get();
             $toppings=DB::table('toppings')->get();
+            $sizes = DB::table('pizzasize')->get();
             //dd($user, $company, $store, $totalStore, $loc, $slug, $totalCom, $cate, $isLogin);
-            return view('user.store', compact('user', 'company', 'store', 'totalStore', 'loc', 'slug', 'totalCom', 'cate', 'isLogin', 'filter','toppings'));
+            return view('user.store', compact('user', 'company', 'store', 'totalStore', 'loc', 'slug', 'totalCom', 'cate', 'isLogin', 'filter','toppings','sizes'));
         }
     }
 
@@ -178,6 +180,7 @@ class storeUController extends Controller
         $franchise = Franchise::where('slug', $slug)->pluck('slug')->first();
         $franchiseRow = Franchise::where('slug', $slug)->first();
         $topping = DB::table('toppings')->get();
+        $sizes = DB::table('pizzasize')->get();
 
         $company = '';
         if ($franchise == 'dominos') {
@@ -222,9 +225,9 @@ class storeUController extends Controller
         // dd($deals, $coupons, $product);
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);
-            return view('user.storeDetail', compact('user', 'franchiseRow', 'product', 'deals', 'coupons','toppings'));
+            return view('user.storeDetail', compact('user', 'franchiseRow', 'product', 'deals', 'coupons','toppings','sizes'));
         } else {      
-            return view('user.storeDetail', compact('franchiseRow', 'product', 'deals', 'coupons','toppings'));
+            return view('user.storeDetail', compact('franchiseRow', 'product', 'deals', 'coupons','toppings','sizes'));
         }
 
         
@@ -314,7 +317,7 @@ class storeUController extends Controller
                 foreach ($franchiseID as $fran){
                     $data = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $data;
-                    $apiData[] = $this->getAPIData($data->slug,$localStorage->pizzaSize,$localStorage->topping,$localStorage->pizzaPref);
+                    $apiData[] = $this->getAPIData($data->slug,$localStorage->pizzaSize,$localStorage->topping);
                 }
                 $totalStore = count($franchise);    
                 $res = array(
@@ -397,27 +400,15 @@ class storeUController extends Controller
         }
     }
 
-    public function getAPIData($slug,$size,$topping,$pref)
+    public function getAPIData($slug,$size,$topping)
     {
         //$store = Store::where('slug', $slug)->first();
         $today = date("Y-m-d");
         $franchise = Franchise::where('slug', $slug)->pluck('slug')->first();
         $franchiseRow = Franchise::where('slug', $slug)->first();
-        $pizzaSize = '';
+        $pizzaSize = $size;
         $topping = (int)$topping;
-        if($size==0){
-            $pizzaSize = 'small';
-        }
-        elseif($size==1){
-            $pizzaSize = "medium";
-            
-        }
-        elseif($size==2){
-            $pizzaSize = "large";
-        }
-        elseif($size==3){
-            $pizzaSize = "extra large";
-        }
+        
         $company = '';
 
         if ($franchise == 'dominos') {
@@ -442,7 +433,7 @@ class storeUController extends Controller
         }
         else{
             $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize,"preference"=>$pref));
+            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
         }
         
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
@@ -455,7 +446,7 @@ class storeUController extends Controller
         
         $deals = [];
         $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => "","topping"=>$topping,"size"=>$pizzaSize,"preference"=>$pref));
+        $payload = json_encode(array("company" => $company, "discountType" => "SALES & OFFERS", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -492,7 +483,7 @@ class storeUController extends Controller
                 $franchise = DB::table('franchises')->where('slug',$request->slug)->get();
                 
                 
-                $apiData[] = $this->getAPIData($request->slug,$preferences->pizzaSize,$preferences->topping,$preferences->pizzaPref);
+                $apiData[] = $this->getAPIData($request->slug,$preferences->pizzaSize,$preferences->topping);
                 
                 $totalStore = count($franchise);    
                 
@@ -527,27 +518,48 @@ class storeUController extends Controller
     public function search_preference(Request $request)
     {
         if ($request->ajax()) {
-            $data = json_decode($request->data);
-            
-            
             $apiData=[];
             $franchise=[];
-            $loc=false;
-            
-            if(isset($data->location)){
+            if(Auth::user()){
+                $user = DB::table('users')->where('id',auth()->user()->id)->first();
+                $userPref = DB::table('preference')->where('user_id',auth()->user()->id)->first();
+                $stores = DB::table('preference_stores')->join('franchises','franchises.id','=','preference_stores.franchise')
+                ->where('preference_stores.preference_id',$userPref->idpreference)->get();
+                foreach($stores as $s){
+                    $userStores[]=$s->franchise;
+                }
 
+                $data=array(
+                    'pizzaSize'=>$userPref->pizzaSize,
+                    'topping'=>$userPref->toppings,
+                    'pizzaStore'=>$userStores,
+                    'zip_code'=>$user->zip_code,
+                    'state'=>$user->zip_code,
+                    'city'=>$user->city,
+                );
+                $codeData = json_encode($data);
+                $data = json_decode($codeData);
+                $city=$data->city;
+                $zip=$data->zip_code;
+                $state=$data->state;
+                $Preferences = session()->put('preferences',$data);   
+                
+                
+            }
+            else{
+                $data = json_decode($request->data);
+                
                 $Preferences = session()->put('preferences',$data);            
-                $loc=$data->location;
+                $city=$data->location;
+                $zip=$data->location;
+                $state=$data->location;
             }
 
-
-            if($loc){
                 $stores=array();
-                
 
                 foreach ($data->pizzaStore as $value) {
-                    $search = DB::table('stores')->where('city','like','%'.$data->location.'%')
-                    ->orWhere('zip_code','like','%'.$data->location.'%')->orWhere('state','like','%'.$data->location.'%')->get();     
+                    $search = DB::table('stores')->where('city','like','%'.$city.'%')
+                    ->orWhere('zip_code','like','%'.$zip.'%')->orWhere('state','like','%'.$state.'%')->get();     
                     foreach($search as $s){
                         if($s->companyID==$value){
                             $stores[]=$s;
@@ -555,6 +567,8 @@ class storeUController extends Controller
                     }
                                   
                 }
+
+                
 
                 
 
@@ -569,7 +583,7 @@ class storeUController extends Controller
                 foreach ($franchiseID as $fran){
                     $storeData = DB::table('franchises')->where('id',$fran)->first();
                     $franchise[] = $storeData;
-                    $apiData[] = $this->getAPIData($storeData->slug,$data->pizzaSize,$data->topping,$data->pizzaPref);
+                    $apiData[] = $this->getAPIData($storeData->slug,$data->pizzaSize,$data->topping);
                     
                 }
                 $totalStore = count($franchise);   
@@ -589,20 +603,10 @@ class storeUController extends Controller
                
                 return response()->json($view);
                 
-            }
+           
             
             
-            else {
-               
-                $res = array(
-                    "success"=>false,
-                    "message"=> 'We cannot access your location at the moment.',
-                   
-                );
-                $view=view("jquery.stores",compact('franchise','apiData'))->render();
-                
-                return response()->json($view);
-            }
+           
         } 
         else {
             $res = array("success" => 0, "message" => "opps!something went wrong");
@@ -662,5 +666,19 @@ class storeUController extends Controller
         $real_distance = round($distance * 60 * 1.1515, 4);
         //dd($real_distance);
         return $real_distance;
+    }
+
+    public function userOrderNow(){
+
+        $sizes = DB::table('pizzasize')->get();
+        $slug="";
+        $filter = ['dominos', 'pizza-hut', 'little-caesars', 'papa-johns', 'california-pizza-kitchen', 'papa-murphys', 'sbarro', 'marcos', 'cicis-pizza', 'chuck-e-cheese'];
+        $isLogin = (Auth::user())?true:false;
+        $totalCom = Franchise::count();
+        $company = Franchise::get();
+        $cate = PizzaCategory::where('isActive',1)->get();
+        $toppings = DB::table('toppings')->get();
+        //dd($store, $filter, $isLogin, $totalCom, $company, $cate);
+        return view('user.store',compact('slug','company','totalCom','cate','isLogin', 'filter','toppings','sizes'));
     }
 }
