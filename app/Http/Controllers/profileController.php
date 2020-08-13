@@ -20,23 +20,24 @@ class profileController extends Controller
     }
     public function userAccount()
     {
+      $stores=[];
     	$user = User::find(Auth::user()->id);
     	$cate = PizzaCategory::get();
       $com = Franchise::get();
       $toppings = DB::table('toppings')->get();
       $userPref = DB::table('preference')->where('user_id',auth()->user()->id)->first();
       $sizes = DB::table('pizzasize')->get();
-      $stores = DB::table('preference_stores')->join('franchises','franchises.id','=','preference_stores.franchise')
-      ->where('preference_stores.preference_id',$userPref->idpreference)->get();
-      // print_r($userPref);
-      // dd($user);
+      if($userPref){
+        $stores = DB::table('preference_stores')->join('franchises','franchises.id','=','preference_stores.franchise')
+        ->where('preference_stores.preference_id',$userPref->idpreference)->get();
+      }
+      
+      
     	return view('user.userAccount',compact('user','cate','com','toppings','userPref','sizes','stores'));
     }
     public function update(Request $req)
     {
       $user = DB::table('users')->where('id',auth()->user()->id)->first();
-      
-
       $imgname = $user->imgname;
 
       if($req->uimg)
@@ -77,28 +78,36 @@ class profileController extends Controller
       }
 
 
-
-      for($i=0;$i<count($req->pizzaStore); $i++){
-        $franchiseData = array(
-          'user_id'=>auth()->user()->id,
-          'franchise'=>$req->pizzaStore[$i],
-          'preference_id'=>$idpreference
-        );
-        DB::table('preference_stores')->insert($franchiseData);
+      
+      if(!isset($req->pizzaStore)){
+        if(count($req->currentStore)>0){
+          for($i=0;$i<count($req->currentStore); $i++){
+            $franchiseData = array(
+              'user_id'=>auth()->user()->id,
+              'franchise'=>$req->currentStore[$i],
+              'preference_id'=>$idpreference
+            );
+            DB::table('preference_stores')->insert($franchiseData);
+          }
+        }
+        else{
+          // Validation Error
+          return redirect()->route('myaccount');
+        }
+      }
+      else{
+        
+        for($i=0;$i<count($req->pizzaStore); $i++){
+          $franchiseData = array(
+            'user_id'=>auth()->user()->id,
+            'franchise'=>$req->pizzaStore[$i],
+            'preference_id'=>$idpreference
+          );
+          DB::table('preference_stores')->insert($franchiseData);
+        }
       }
       
-      
-      // print_r($update);
-        
-      // if($req->uimg)
-      // {
-      //   $file = $req->uimg;
-      //   $imgname = $file->getClientOriginalName();
-      //   $file->move('userAssets/userImage',$file->getClientOriginalName());
-      //   $user->imgname = $imgname;
-      // }
-      // $user->save();
-      return redirect()->route('myaccount');
+      return redirect('order-now')->with('success','Profile successfully updated');;
     }
     public function save(Request $req)
     {
@@ -161,6 +170,7 @@ class profileController extends Controller
     }
     public function checkEmail(Request $req)
     {
+      print_r($req->email);
       $user = User::where('email',$req->email)->count();
       if($user)
       {

@@ -92,143 +92,40 @@
   .text-right.dropdown.user:hover{
     cursor: pointer;
   }
+  .home-order{
+    font-size:15px;
+  }
+  @media (min-width:320px)  { /* smartphones, portrait iPhone, portrait 480x320 phones (Android) */ }
+  @media (min-width:480px)  { /* smartphones, Android phones, landscape iPhone */ }
+  @media (min-width:600px)  { 
+    .home-order-mobile
+    {
+      display: none;
+    } 
+   }
+  @media (min-width:801px)  { 
+    .home-order-mobile
+    {
+      display: none;
+    } 
+}
+  @media (min-width:1025px) {  
+    .home-order-mobile
+      {
+        display: none;
+      } 
+  }
+  @media (min-width:1281px) {
+    .home-order-mobile
+      {
+        display: none;
+      } 
+   }
 </style>
 @endsection
 @section('content')
 @include('sweet::alert')
-{{--
-<form class="modal multi-step" id="detailModal" method="post" enctype="multipart/form-data" action="{{ route('profile.saveDetails')}}"> <!-- action="{{ route('profile.saveDetails')}}" -->
-  @csrf
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header" >
-        <h4 class="modal-title step-1" data-step="1">Your Preference</h4>
-        <h4 class="modal-title step-2" data-step="2">Personal Details</h4>
-          <!-- <div class="m-progress">
-            <div class="m-progress-bar-wrapper">
-              <div class="m-progress-bar">
-              </div>
-            </div>
-            <div class="m-progress-stats">
-              <span class="m-progress-current">
-              </span>
-              /
-              <span class="m-progress-total">
-              </span>
-            </div>
-          </div> -->
-        </div>
 
-        <div class="modal-body step-1" data-step="1">
-          <div class="form-group">
-            <label for="pizzaStore">Pizza Store</label>
-            <div class="">
-              <select data-placeholder="Choose your favourite 3 stores" multiple class="form-control chosen-select" name="pizzaStore[]" id="pizzaStore" >
-                @foreach($com as $row)
-                <option value="{{ $row->id }}" >{{ $row->name }}</option>
-                @endforeach
-              </select>
-            </div>
-            <label id="storeResult" class="errMsg"></label>
-          </div>
-          <div class="form-group">
-            <label for="pizzaPref">Pizza Preference</label>
-            <div class="">
-              <select class="form-control" data-placeholder="Choose a Pizza type" multiple  name="pizzaPref[]" id="pizzaPref">
-                @foreach($cate as $row)
-                <option value="{{ $row->id }}">{{ $row->category }}</option>
-                @endforeach
-              </select>
-            </div>
-            <label id="prefResult" class="errMsg"></label>
-          </div>
-          <div class="form-group">
-            <label for="pizzaSize">Pizza Size</label>
-            <div class="">
-              <select class="form-control" name="pizzaSize" id="pizzaSize">
-               <option value="">Select size</option>
-               <option value="0">Small</option>
-               <option value="1">Medium</option>
-               <option value="2">Large</option>
-               <option value="3">Extra large</option>
-             </select>
-           </div>
-           <label id="sizeResult" class="errMsg"></label>
-         </div>
-         <div class="form-group">
-          <label for="deliveryMethod">Delivery methods</label>
-          <select class="form-control" name="deliveryMethod" id="deliveryMethod">
-            <option value="">Select delivery method</option>
-            <option value="delivery">Delivery </option>
-            <optgroup label="Delivery Service">
-              <option value="ubereats">Ubereats </option>
-              <option value="postmates">Postmates </option>
-              <option value="grubhub">Grubhub </option>
-              <option value="doordash">Doordash</option>
-            </optgroup>
-            <option value="pickup">Pickup</option>
-            <option value="eatin">Eat-In</option>
-          </select>
-          <label id="delResult" class="errMsg"></label>
-        </div>
-        <div class="form-group">
-          <label>Do you Like Buffet</label>
-          <div class="form-control">
-            <input  type="radio" name="buffet" value="0"> NO &nbsp;&nbsp;&nbsp;
-            <input  type="radio" name="buffet" value="1" checked="true"> YES
-          </div>
-        </div>
-      </div>
-      <div class="modal-body step-2" data-step="2">
-        <div class="form-group">
-          <label>Address</label>
-          <textarea class="form-control" placeholder="Address" name="address" id="address"></textarea>
-          <label id="addResult" class="errMsg"></label>
-        </div>
-        <div class="form-group">
-          <label>Country</label>
-          <!-- <input type="text" class="form-control" name="country" id="country" placeholder="country"> -->
-          <select class="form-control" name="country" id="country">
-            <option value="">Select Country</option>
-            <option value="United States of America">United States of America</option>
-            <option value="Canada">Canada</option>
-          </select>
-          <label id="conResult" class="errMsg"></label>
-        </div>
-        <div class="form-group">
-          <label>State</label>
-          <!-- <input type="text"  class="form-control" name="state" id="state" placeholder=" -->
-          <select class="form-control" name="state" id="state">
-            <option value="" disabled selected>Please Select Country First</option>
-          </select>
-          <label id="staResult" class="errMsg"></label>
-        </div>
-        <div class="form-group">
-          <label>City</label>
-          <input type="text" name="city" id="city" class="form-control" placeholder="City">
-          <label id="ciResult" class="errMsg"></label>
-        </div>
-        <div class="form-group">
-          <label>Profile Image</label>
-          <input type="file" name="uimg" id="uimg" class="form-control " >
-          <label id="imgResult" class="errMsg"></label>
-        </div>
-      </div>
-        <!-- <div class="modal-body step-3" data-step="3">
-          This is the final step.
-        </div> -->
-        <div class="modal-footer">
-          <!--  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
-          <button type="button" class="btn btn-secondary step step-2" data-step="2" onclick="sendEvent('#detailModal', 1)" style="background-color: darkgray"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button>
-          <button type="button" class="btn btn-secondary step step-1" data-step="1" id="continue" style="background-color: darkgray">Next
-            <i class="fa fa-arrow-right" aria-hidden="true"></i></button>
-            <!-- <button type="button" class="btn btn-primary step step-3" data-step="3" onclick="sendEvent('#demo-modal-3', 2)">Back</button>  onclick="sendEvent('#detailModal', 2)"  onclick="sendEvent('#detailModal', 3)"-->
-            <button type="submit" class="btn btn-success step step-2" data-step="2" id="finish" style="background-color: green">Finish</button>
-          </div>
-        </div>
-      </div>
-    </form>
---}}
 
     <section>
       <div class="block blackish opac50">
@@ -253,6 +150,11 @@
       <div class="block no-padding overlape-45">
         <div class="container">
           <div class="row">
+            <div class="home-order-mobile">
+              <div class="col-md-12 col-sm-12 col-lg-12" align="center" style="margin-bottom: 20px;">
+                <a href="{{ URL::TO('order-without-login') }}"> <button class=" home-order load-more  red-bg btn-lg" data-totalRes="{{ $totalProd }}">Order Without Login</button></a>
+              </div>
+            </div>
             <div class="col-md-12 col-sm-12 col-lg-12">
               <div class="top-restaurants-wrapper">
                 <ul class="restaurants-wrapper style2">

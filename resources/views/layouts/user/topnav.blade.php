@@ -23,7 +23,7 @@
           </li>
           <li>
             @if(!Auth::user())
-            <a href="{{ url('/order-wihtout-login') }}" title="Order Without Login" class="order-without-login">ORDER WITHOUT LOGIN</a>
+            <a href="{{ url('/order-without-login') }}" title="Order Without Login" class="order-without-login">ORDER WITHOUT LOGIN</a>
             @else
             <a href="{{ url('/order-now') }}" title="Order Now" class="order-without-login">ORDER NOW</a>
             @endif
@@ -63,4 +63,4 @@
     </div>
   </div>
 </div>
-</header>
+</header><br>

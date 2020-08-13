@@ -139,6 +139,35 @@ select[multiple] {
         transform: rotate(1800deg);
     }
 }
+
+  @media (min-width:320px)  { 
+    .search-form-mobile{
+      width:100%;
+    }
+  }
+  @media (min-width:480px)  { 
+    .search-form-mobile{
+      width:100%;
+    } 
+  }
+  @media (min-width:600px)  { 
+    .search-form-mobile{
+      width:100%;
+    }
+  }
+  @media (min-width:801px)  { 
+    .search-form-mobile{
+      width: 50%;
+    }
+  }
+  @media (min-width:1025px) {  
+    .search-form-mobile{
+      width:50%;
+    }
+  }
+  @media (min-width:1281px) {
+    
+  }
 </style>
 @endsection
 @section('content')
@@ -176,8 +205,8 @@ select[multiple] {
                     </div>
                   </div>
                 </div>
-                <div class="col-md-9 col-sm-12 col-lg-9">
-                  <form class="search-frm" id="searchForm">
+                <div class="col-xs-12 col-md-9 col-sm-12 col-lg-9">
+                  <form class="search-frm search-form-mobile" id="searchForm">
                     @csrf
                     <input type="text" name="slug"  value="<?php if($slug!="" || $slug!= null)echo $slug; else echo "notdefine"; ?>" hidden>
                     <input type="text" placeholder="Enter zipcode or address" name="filter">
@@ -225,38 +254,6 @@ select[multiple] {
                     <div class="row store-list">
                       
                      
-                        {{-- @if(count($store) == 0 and Request::segment(1)!='order-wihtout-login')
-                         
-                          <div class="col-md-12" ><h3 align="center">No stores available in your area</h3></div>
-                          
-                        @endif --}}
-
-                        
-                        {{-- @foreach($store  as $row)
-                            <div class="col-md-6 col-sm-6 col-lg-6 store-box">
-                                <div class="featured-restaurant-box with-bg style2 brd-rd12 wow fadeIn" data-wow-delay="0.1s">
-                                    <div class="featured-restaurant-thumb">
-                                        <a href="/store/{{ $row->slug}}" title="" itemprop="url"><img data-src="{{ asset('adminAssets/franchiseLogo/'.$row->company->logo)}}" class="lazy" alt="company logo" itemprop="image"></a>
-                                    </div>
-                                    <div class="featured-restaurant-info">
-                                        <span class="red-clr">{{ ucfirst($row->address) }}</span>
-                                        <h4 itemprop="headline"><a href="/store/{{ $row->slug }}" title="" itemprop="url">{{ucfirst($row->name)}}</a></h4>
-                                        <div class="row">
-                                            @foreach($row->products as $prd)
-                                                @if($loop->iteration>3)
-                                                    @break;
-                                                @endif
-                                                <div class="col-md-4">
-                                                    <div> <img data-src="{{ asset('pizzaImage/'.$prd->pizzaImage) }}" class="lazy" style="height:50px;width: 50px"></div>
-                                                    <div class="food-types" style="font-size:9px">{{ ucfirst($prd->name) }}</div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                        <a class="brd-rd30" href="/store/{{ $row->slug }}" title="Order Online"><i class="fa fa-angle-double-right"></i> Order Online</a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach --}}
                     </div>
 
                 </div>
@@ -277,7 +274,7 @@ select[multiple] {
     </div>
   </div>
 
-  @if(Request::segment(1)=='order-wihtout-login')
+  @if(Request::segment(1)=='order-without-login')
     <form class="modal multi-step" id="detailModal" method="post" enctype="multipart/form-data" data-backdrop="static" data-keyboard="false">
       @csrf
       <div class="modal-dialog">
@@ -457,8 +454,9 @@ select[multiple] {
 
   $(document).ready(function(){
     $(function () {
-      var loading = '<div class="lds-hourglass" style="text-align: center"> Loading...</div>';
+      var loading = '<div class="lds-hourglass" style="text-align:center"> Loading...</div>';
       $(".store-list").html(loading);
+      
       $.ajax({
         url:"{{ route('store.preference') }}",
         type:"post",
@@ -470,7 +468,7 @@ select[multiple] {
           $(".store-list").html(data);
         },
         error: function (data) {
-          var error = '<div style="text-align: center"> Error Occured!!!!</div>';
+          var error = '<div style="text-align:center"> Error Occured!!!!</div>';
           $(".store-list").html(error);
         },
       })    
@@ -482,9 +480,7 @@ select[multiple] {
 
 <script type="text/javascript">
   $(document).ready(function(){
-    $(function () {
-      $('select').selectpicker();
-    });
+    
     $('.pizzaSize').click(function() {
       if($(this).prop('checked'))
       {
@@ -866,7 +862,7 @@ $('#companytext').keyup(function(){
             // var detail=JSON.stringify(data);
             // localStorage.setItem('detail', detail);
             $('#detailModal').modal('toggle');
-            if($(location).attr('href').includes('order-wihtout-login'))
+            if($(location).attr('href').includes('order-without-login'))
             {
               $("#detailModal").modal('hide');
               var info = JSON.stringify(data);

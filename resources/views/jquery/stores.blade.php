@@ -22,15 +22,16 @@
                                         <h1 itemprop="headline">{{$franchise[$i]->name}}</h1>
                                         <div class="info-meta">
                                             
-                                            <span><a href="#" title="" itemprop="url">static</a>, <a href="#" title="" itemprop="url">static</a></span>
+                                            {{-- <span><a href="#" title="" itemprop="url">static</a>, <a href="#" title="" itemprop="url">static</a></span> --}}
                                         </div>
                                     </div>
                                     <div class="restaurant-detail-tabs">
                                         <ul class="nav nav-tabs">
                                             
-                                            <li><a href="#tab{{$i}}-2" data-toggle="tab"><i class="fa fa-percent"></i>Coupons</a></li>
+                                            <li><a href="#tab{{$i}}-2" data-toggle="tab"><i class="fa fa-percent"></i>Preferred Coupons</a></li>
+                                            <li><a href="#tab{{$i}}-4" data-toggle="tab"><i class="fa fa-percent"></i>Explore</a></li>
                                             <li><a href="#tab{{$i}}-3" data-toggle="tab"><i class="fa fa-percent"></i>Sales and Offers</a></li>
-                                            <li><a href="#tab{{$i}}-5" data-toggle="tab"><i class="fa fa-info"></i> franchise Info</a></li>
+                                            {{-- <li><a href="#tab{{$i}}-5" data-toggle="tab"><i class="fa fa-info"></i> franchise Info</a></li> --}}
                                         </ul>
                                         <div class="tab-content">
                                            
@@ -75,6 +76,50 @@
                                                     </ul>
                                                 </div>
                                             </div>
+
+
+                                            {{-- Explore --}}
+
+                                            <div class="tab-pane fade in" id="tab{{$i}}-4">
+                                                <div class="dishes-list-wrapper">
+                                                    <h4 class="title3" itemprop="headline"><span class="sudo-bottom sudo-bg-red">Explore Coupons</span></h4>
+                                                    <ul class="dishes-list">
+                                                        {{-- @if($coupons != null) --}}
+                                                        <?php for($j=0; $j<count($apiData[$i]['explore']); $j++){?>
+                                                        <li class="wow fadeInUp" data-wow-delay="0.1s">
+                                                            <div class="row summary">
+                                                                <div class="col-sm-10 description">
+                                                                    <div>
+                                                                        <h3>{{ $apiData[$i]['explore'][$j]['discount'] }}</h3>
+                                                                    </div>
+                                                                    <div>
+                                                                        {{ $apiData[$i]['explore'][$j]['pizzaSummary'] }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-sm-2 redirect-div">
+                                                                    <div class="button-redirect">
+                                                                        <a class="btn btn-primary copyCoupon"  
+                                                                            data-code= "{{ $apiData[$i]['explore'][$j]['couponCode'] }}" 
+                                                                            data-url="{{ $apiData[$i]['explore'][$j]['websiteName'] }}"
+                                                                        >
+                                                                            Use this coupon
+                                                                        </a>
+                                                                    </div>
+                                                                    <div class="coupons-code">
+                                                                        <span>
+                                                                            {{ $apiData[$i]['explore'][$j]['couponCode'] }}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                        <?php }?>
+                                                        {{-- @endif --}}
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+
 
                                             {{-- Sales --}}
 

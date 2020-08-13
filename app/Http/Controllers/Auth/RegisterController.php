@@ -53,15 +53,15 @@ class RegisterController extends Controller
 
         event(new Registered($user = $this->create($request->all())));
 
-        // $this->guard()->login($user);
-        // $name = $request->name;
-        // $to = $request->email;
-        // $subj = 'Verification from Pizzapizzaria';
-        // $msg = '';
-        // $code = $user->code;
-        // Mail::to($to)->send(new VerifyUser($code, $name, $subj, $msg));
+        $this->guard()->login($user);
+        $name = $request->name;
+        $to = $request->email;
+        $subj = 'Verification from Pizzapizzaria';
+        $msg = '';
+        $code = $user->code;
+        Mail::to($to)->send(new VerifyUser($code, $name, $subj, $msg));
 
-        return $this->registered($request, $user) ?: redirect($this->redirectPath())->with('verify', 'sent');
+        return $this->registered($request, $user) ?: redirect($this->redirectPath());
     }
     public function showRegistrationForm()
     {
@@ -118,30 +118,30 @@ class RegisterController extends Controller
     public function verifyEmail(Request $request)
     {
         $user = Auth::user();
-        if($user){
-            $user->email_verified_at = date('Y-m-d H:i:s');
-            $user->save();
-            return redirect('/home');
-        }
-        // if(!$user->email_verified_at)
-        // {
-        //     if($request->code)
-        //     {
-        //         if($user->code == $request->code)
-        //         {
-        //             $user->email_verified_at = date('Y-m-d H:i:s');
-        //             $user->save();
-        //             return redirect('/home');
-        //         }
-        //         else {
-        //             return back()->with('invalid', 'error');
-        //         }
-        //     }
-        // }
-        // else{
+        // if($user){
+        //     $user->email_verified_at = date('Y-m-d H:i:s');
+        //     $user->save();
         //     return redirect('/home');
         // }
-        // return view('user.verifyUser');
+        if(!$user->email_verified_at)
+        {
+            if($request->code)
+            {
+                if($user->code == $request->code)
+                {
+                    $user->email_verified_at = date('Y-m-d H:i:s');
+                    $user->save();
+                    return redirect('/home');
+                }
+                else {
+                    return back()->with('invalid', 'error');
+                }
+            }
+        }
+        else{
+            return redirect('/home');
+        }
+        return view('user.verifyUser');
 
 
 

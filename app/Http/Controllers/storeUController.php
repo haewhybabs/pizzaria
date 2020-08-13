@@ -427,14 +427,12 @@ class storeUController extends Controller
             $company = 'cicis';
         }
         $coupons = [];
-        if($size==null){
-            $ch = curl_init("https://pizzafeed.herokuapp.com/admin/fetch");  
-            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => ""));
-        }
-        else{
-            $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
-            $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
-        }
+       
+        
+        
+        $ch = curl_init("https://pizzafeed.herokuapp.com/fetch");
+        $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => "","topping"=>$topping,"size"=>$pizzaSize));
+        
         
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
@@ -453,6 +451,19 @@ class storeUController extends Controller
         $result = curl_exec($ch);
         curl_close($ch);
         $deals = json_decode($result, true)['response'];
+
+
+        $explore = [];
+        $ch = curl_init("https://pizzafeed.herokuapp.com/admin/fetch");  
+        $payload = json_encode(array("company" => $company, "discountType" => "COUPON", "page" => ""));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+        curl_close($ch);
+        $explore = json_decode($result, true)['response'];
+
+
         if ($franchise == null) {
             return redirect()->back();
         }
@@ -461,7 +472,8 @@ class storeUController extends Controller
         $data = array(
             'coupon'=>$coupons,
             'deals'=>$deals,
-            'product'=>$product
+            'product'=>$product,
+            'explore'=>$explore
         );
 
         return $data;
@@ -668,7 +680,13 @@ class storeUController extends Controller
         return $real_distance;
     }
 
-    public function userOrderNow(){
+    public function userOrderNow()
+    {
+        
+        $userPref = DB::table('preference')->where('user_id',auth()->user()->id)->first();
+        if(!$userPref){
+            return redirect()->route('myaccount');
+        }
 
         $sizes = DB::table('pizzasize')->get();
         $slug="";

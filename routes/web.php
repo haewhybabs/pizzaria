@@ -74,7 +74,7 @@ Route::group(['middleware' => 'isVerified'], function() {
 
 	Route::any('/search-filter','storeUController@search_filter')->name('store.filter');
 	Route::any('/search-preference','storeUController@search_preference')->name('store.preference');
-	Route::get('/order-wihtout-login','orderWithoutLoginController@storeLogo');
+	Route::get('/order-without-login','orderWithoutLoginController@storeLogo');
 	// Route::get('/order-now','storeUController@orderNow');
 	Route::get('/order-now','storeUController@userOrderNow');
 });

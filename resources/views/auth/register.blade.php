@@ -120,16 +120,16 @@
         email:{
           required:true,
           email:true,
-          remote:{
-            url:"{{ route('profile.checkemail') }}",
-            type:"post",
-            data:{
-              "_token": "{{ csrf_token() }}",
-              email:function(){
-                return $('#regForm :input[name="email"]').val();
-              }
-            }
-          }
+          // remote:{
+          //   url:"{{ route('profile.checkemail') }}",
+          //   type:"post",
+          //   data:{
+          //     "_token": "{{ csrf_token() }}",
+          //     email:function(){
+          //       return $('#regForm :input[name="email"]').val();
+          //     }
+          //   }
+          // }
         },
         password:{
           required:true,

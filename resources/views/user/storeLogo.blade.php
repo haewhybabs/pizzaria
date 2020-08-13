@@ -43,7 +43,18 @@
           <div class="sec-box">
             <div class="sec-wrapper">
               <div class="row">
-                <div class="col-md-12 col-sm-12 col-lg-12" align="center">
+                @foreach($company as $row)
+                <div class="col-sm-2 col-xs-6 col-md-2 col-lg-2">
+                  <li class="wow bounceIn" data-wow-delay="0.2s" style="list-style: none;">
+                    <div style="margin-top:5px;">
+                      <a class="brd-rd50" href="{{ route('home.store')}}/{{ $row->slug }}" title="{{ $row->name }}" itemprop="url">
+                        <img data-src="{{ asset('adminAssets/franchiseLogo/'.$row->logo)}}"  itemprop="image" class="logoimg lazy" >
+                      </a>
+                    </div>
+                  </li>  
+                </div>
+                @endforeach
+                {{-- <div class="col-md-12 col-sm-12 col-lg-12" align="center">
                   <div class="top-restaurants-wrapper">
                     <ul class="restaurants-wrapper style2">
 
@@ -52,7 +63,7 @@
                       @endforeach
                     </ul>
                   </div>
-                </div>
+                </div> --}}
               </div>
             </div>
           </div>
